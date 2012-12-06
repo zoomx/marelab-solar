@@ -1,0 +1,1 @@
+ARM -> LINUX mount  mount -t nfs -o nolock 192.168.178.48:/home/ths/arm/workspace-marelab-solar /nfs
