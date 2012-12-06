@@ -1,0 +1,59 @@
+Bill Of Materials
+=================
+Design:   C:\!AQUA\MBD\MBD.DSN
+Doc. no.: <NONE>
+Revision: <NONE>
+Author:   <NONE>
+Created:  09/05/12
+Modified: 29/10/12
+
+QTY  PART-REFS           VALUE               CODE                          
+---  ---------           -----               ----                          
+Resistors
+---------
+OK 4    R1-R4               22R                                               
+OK 1    R5                  1M                                                
+OK 1    R6                  10k                                               
+
+Capacitors
+----------
+OK 1    C1                  47nF                                              
+OK 2    C2,C6               1nF                                               
+OK 2    C3,C15              10uF                                              
+OK 8    C4,C5,C8,C9,        100nF                                             
+        C12-C14,C16
+OK 2    C7,C17              1uF                                               
+OK 1    C10                 10u                 Digikey 495-2200-2-ND         
+
+Integrated Circuits
+-------------------
+OK 1    U1                  ADUM3160            ADUM3160                      
+OK 1    U4                  ISO3086T            ISO3086TDWR                   
+OK 1    U5                  TPS76350            TPS76350DBVR                  
+OK 1   U100                                                                  
+
+Diodes
+------
+OK 2    D1,D2               TVS                 VCUT0714A-02Z alternative 78-VCUT0714A-HD1                
+OK 2    D3,D4               MBR0520L                                          
+OK 1    D5                  CD1206-S01575                                     
+
+Miscellaneous
+-------------
+OK 2    CC1,CC2             22pF                                              
+1    DERR                LED                                               
+1    F1                  SMD-FUSE            MF-MSMF050                    
+OK 1    J-BUS               SIL-100-08                                        
+1    J-ICSP              26640601RP2         NorComp 26640601RP2           
+2    J1,J3                                                                 
+4    J1-2,J2-1,J3-2,J4-2 2mm                                               
+1    J2                  USBCONN                                           
+1    J4                  SIL-100-03                                        
+1    JLED                SIL-100-02                                        
+OK 1    L1                  MH2029-300Y         MH2029-300Y                   
+OK 1    RLED                1K                                                
+OK 1    RR2                 10k                                               
+OK 1    T1                  782485/55C          782485/55C                    
+OK 1    X1                  CRYSTAL                                           
+4    Z2-Z5                                   CG0603MLC-05E                 
+
