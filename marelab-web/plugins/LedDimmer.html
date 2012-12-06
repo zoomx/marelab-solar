@@ -1,0 +1,69 @@
+<div id="tabs-1">
+	<div id="RECHTS" class=".ui-accordion-header">	
+		<div id="titel_setup_content">
+		<div id="TOOLBAR-TITEL">high power led settings...</div>
+		<div id="TOOLBAR">
+			<button id="BUTTON_RGBLED" onclick="OpenRGBDialog()">RGB</button>
+			<button id="BUTTON_SAVELED" onclick="led_SAVECURVE()">SAVE</button> 
+		</div>
+		</div>
+		<canvas id="cvs" width="700" height="400"> </canvas>
+	</div>
+</div>
+<div id="tabs-2">
+	<div id="RECHTS" class=".ui-accordion-header">
+		<div class="ledtable">
+			<table id="list4">
+				<tbody>
+					<tr>
+						
+						
+					</tr>
+				</tbody>
+			</table>
+			<div id="pager1"></div>
+		</div>
+	</div>
+</div>
+<div id="dialogRGB" title="LED RGB Color">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <th align="left" rowspan="4" scope="col">
+		<input type="text" id="color" name="color" value="#123456" />
+    	<div id="colorpicker"></div>
+    </th>
+    <th align="left" scope="col">red:</th>
+    <th align="left" scope="col" id="redleddropdown">
+    	<select id="RED_LED size="1">
+				<option>LED1</option>
+				<option>LED2</option>
+				<option>LED3</option>
+		</select>
+	</th>
+  </tr>
+  <tr>
+    <td align="left">green:</td>
+    <td align="left" id="greenleddropdown">
+    	<select id="GREEN_LED" size="1">
+				<option>LED1</option>
+				<option>LED2</option>
+				<option>LED3</option>
+		</select>
+    </td>
+  </tr>
+  <tr>
+    <td align="left">blue:</td>
+    <td align="left" id="blueleddropdown">
+    	<select id="BLUE_LED" size="1">
+				<option>LED1</option>
+				<option>LED2</option>
+				<option>LED3</option>
+		</select>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2"><button id="BUTTON_RGB2LED" onclick="OpenRGBDialog()">SAVE RGB 2 LED</button></td>
+  </tr>
+</table>
+</div>
+
