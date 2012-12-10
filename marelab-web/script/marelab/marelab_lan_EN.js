@@ -5,14 +5,14 @@ var mlang = new Array();
 mlang["Firmware"] = "Firmware";
 mlang["mBDBname"] = "Name";
 mlang["mBDAdress"] = "Adress";
-mlang["blSetup"] = "Einstellungen";
-mlang["PORTSCAN"] = "Schnittstelle";
-mlang["TOOLBAR-TITEL-PORTSETTING"] = "marelab port language test settings...";
-mlang["toolbarTitelPluginsInstalled"] = "marelab mcu plugins installed....";
-mlang["titelmBDDeviceList"] = "marelab mBD device list...";
-mlang["PortInputFieldName"] = "Schnittstelle:";
+mlang["blSetup"] = "Settings";
+mlang["PORTSCAN"] = "Reload Ports";
+mlang["TOOLBAR-TITEL-PORTSETTING"] = "port settings:";
+mlang["toolbarTitelPluginsInstalled"] = "mCU plugins detected:";
+mlang["titelmBDDeviceList"] = "mBD device list:";
+mlang["PortInputFieldName"] = "Port:";
 mlang["PortBaudFieldName"] = "Baud:";
-mlang["portDescription"] = "Select the interface where you connect the marelab mBD to. That can be a RS232,RS485 or USB Port that can be connected to the bus & devices.The port is preconfigured to 8 Databits, None Parity & 1 Stopbit";
+mlang["portDescription"] = "Select the port for marelab mBD. Currently supported types are RS232, RS485 and USB.The port is preconfigured to 8 Databits, No Parity &amp; 1 Stopbit";
 mlang["BUTTON_SCAN_MBD"] = "Scan";
 
 

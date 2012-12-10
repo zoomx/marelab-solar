@@ -122,7 +122,7 @@ function GetLedGraph(id, arrayLeds, keyLeds) {
 	line.Set('chart.hmargin', 10);
 	line.Set('chart.shadow', true);
 	line.Set('chart.adjustable', true);
-	line.Set('chart.title', 'High Power Led Dimm Level');
+	line.Set('chart.title', 'Percent over 24 hour period');
 	line.Set('chart.title.vpos', 0.5);
 	line.Set('chart.spline', true);
 	line.Set('chart.tickmarks', 'circle');
@@ -334,7 +334,7 @@ function renderLedTable(jsonLEDS) {
 						editurl : '/cgi/marelab-cgi?COMMAND=SAVE_CONFIG&PARAMETER=LedDimmer',
 						mtype : "POST",
 						//editUrl:'/clientArray',
-						caption : "<h2>High Power LED Setup</h2>"
+						caption : "<h2>Channel Setup</h2>"
 					});
 
 	jQuery("#list4").jqGrid('navGrid', '#pager1', {
