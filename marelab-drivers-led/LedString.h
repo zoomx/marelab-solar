@@ -24,7 +24,8 @@
 #include <vector>
 
 #include "../marelab-nucleus/src/marelab/ipccom.h"
-#include "../marelab-nucleus/src/marelabconf.h"
+
+#define  DAY_SENSE_POINT   48
 /*
  * LedString
  *

@@ -8,8 +8,10 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/marelab-drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/marelab-plugin-led"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/marelab-drivers/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="marelabTempSensor"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/marelab-plugin-led/Debug"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="pluginLedDimmer"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -22,7 +24,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="so" artifactName="marelabTempSensor" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.so.debug.1382160893" name="Debug" parent="cdt.managedbuild.config.gnu.cross.so.debug" postbuildStep="cp /mnt/arm-marelab-dev/marelab-deepblue/marelab-drivers-led/Debug/libmarelabTempSensor.so /mnt/arm-marelab-dev/marelab-deepblue/marelab-nucleus/plugins/libLedDimmer.so">
+				<configuration artifactExtension="so" artifactName="pluginLedDimmer" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.so.debug.1382160893" name="Debug" parent="cdt.managedbuild.config.gnu.cross.so.debug" postbuildStep="cp /home/marelab/git/marelab-solar/marelab-drivers-led/Debug/libpluginLedDimmer.so /home/marelab/git/marelab-solar/marelab-nucleus/plugins/libpluginLedDimmer.so">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.so.debug.1382160893." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.so.debug.1840243831" name="Cross GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross" superClass="cdt.managedbuild.toolchain.gnu.cross.so.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1925745154" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
@@ -143,16 +145,16 @@
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.release.1301821651;cdt.managedbuild.config.gnu.cross.so.release.1301821651.;cdt.managedbuild.tool.gnu.cross.c.compiler.1341191435;cdt.managedbuild.tool.gnu.c.compiler.input.980183903">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.debug.1382160893;cdt.managedbuild.config.gnu.cross.so.debug.1382160893.;cdt.managedbuild.tool.gnu.cross.c.compiler.1144255263;cdt.managedbuild.tool.gnu.c.compiler.input.901121583">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.release.1301821651;cdt.managedbuild.config.gnu.cross.so.release.1301821651.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1618203171;cdt.managedbuild.tool.gnu.cpp.compiler.input.1995133317">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.debug.1382160893;cdt.managedbuild.config.gnu.cross.so.debug.1382160893.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1232476398;cdt.managedbuild.tool.gnu.cpp.compiler.input.1182040267">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.debug.1382160893;cdt.managedbuild.config.gnu.cross.so.debug.1382160893.;cdt.managedbuild.tool.gnu.cross.c.compiler.1144255263;cdt.managedbuild.tool.gnu.c.compiler.input.901121583">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.release.1301821651;cdt.managedbuild.config.gnu.cross.so.release.1301821651.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1618203171;cdt.managedbuild.tool.gnu.cpp.compiler.input.1995133317">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.release.1301821651;cdt.managedbuild.config.gnu.cross.so.release.1301821651.;cdt.managedbuild.tool.gnu.cross.c.compiler.1341191435;cdt.managedbuild.tool.gnu.c.compiler.input.980183903">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
