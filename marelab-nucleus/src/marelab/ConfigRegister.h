@@ -24,9 +24,9 @@
 
 #include "../json/json.h"
 #include "IJsonSerializable.h"
-#include "../marelabconf.h"
 #include "../marelab/mlog.h"
 
+#define CONFIGFILE "marelab_cfg/marelab.cfg"
 
 using namespace std;
 
@@ -73,6 +73,7 @@ public:
     	Json::Reader reader;
     	IJsonSerializable* configObj;
     	ifstream in(CONFIGFILE);
+    	//ifstream in(CONFIGFILE);
     	std::string input,line;
 
     	// Read File

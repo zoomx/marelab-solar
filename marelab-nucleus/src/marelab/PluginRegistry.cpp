@@ -19,18 +19,18 @@
 #include <iostream>
 #include <dlfcn.h>
 #include <cstring>
+#include "ConfigMarelab.h"
 #include "ConfigRegister.h"
 #include "mlog.h"
-#include "../marelabconf.h"
+
 
 
 using namespace std;
 
 
 
-PluginRegistry::PluginRegistry() {
-	// TODO Auto-generated constructor stub
-
+PluginRegistry::PluginRegistry(ConfigMarelab *configMarelab) {
+	this->configMarelab = configMarelab;
 }
 
 
@@ -132,7 +132,7 @@ int PluginRegistry::loadPluging(string filename){
  */
 int PluginRegistry::ScanForPlugins()
 {
-	string dir = PLUGINDIR;
+	string dir = configMarelab->getCfPlugindir();
 	//string dir = "/mnt/arm-marelab-dev/marelab-deepblue/marelab-drivers-led/marelab-drivers/";
 	//vector<string> &files;
 
@@ -172,7 +172,7 @@ PluginObject* PluginRegistry::GetPluginWithName(string name){
 string PluginRegistry::JSONgetPluginFileNames(){
 	PluginObject *pluginobj;
 	string jsonlist;
-	string pathtoplugs = PLUGINDIR;
+	string pathtoplugs = configMarelab->getCfPlugindir();
 	jsonlist = "{";
 	for (unsigned int i=0; i < pluginList.size(); i++) {
 		pluginobj =  pluginList[i];

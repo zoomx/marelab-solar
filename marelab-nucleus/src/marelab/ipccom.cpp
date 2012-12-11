@@ -14,9 +14,9 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <syslog.h>
-
+#include "ConfigMarelab.h"
 #include "ipccom.h"
-#include "marelabconf.h"
+
 
 namespace std {
 
@@ -24,8 +24,8 @@ namespace std {
 /*
  * Setup the Communictaion ipc socket
  */
-ipccom::ipccom() {
-
+ipccom::ipccom(ConfigMarelab *configMarelab) {
+	this->configMarelab = configMarelab;
 }
 
 void ipccom::openServer() {
@@ -39,7 +39,7 @@ void ipccom::openServer() {
 	 else
 	 {
 		 local.sun_family = AF_UNIX;
-		 strcpy(local.sun_path, SOCK_PATH);
+		 strcpy(local.sun_path, configMarelab->getCfSockPath().c_str());
 		 unlink(local.sun_path);
 		 len = strlen(local.sun_path) + sizeof(local.sun_family);
 
@@ -66,7 +66,7 @@ void ipccom::openClient() {
 	 else
 	 {
 		 remote.sun_family = AF_UNIX;
-		 strcpy(remote.sun_path, SOCK_PATH);
+		 strcpy(remote.sun_path,  configMarelab->getCfSockPath().c_str());
 		 len = strlen(remote.sun_path) + sizeof(remote.sun_family);
 		 if (connect(socketid, (struct sockaddr *)&remote, len) == -1) {
 			 string error =  strerror(errno);
@@ -90,7 +90,7 @@ bool ipccom::recvSock(){
     {
     	syslog( LOG_ERR, "Connection accepted...");
     	/* Connected lets get something to recv*/
-    	memset( sockbuf,0, TRANSFER_BUFFER);
+    	memset( sockbuf,0,  TRANSFER_BUFFER);
         n = recv(socketret, sockbuf, TRANSFER_BUFFER, 0);
         if (n <= 0)
         {

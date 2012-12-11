@@ -1,11 +1,27 @@
 /*
- ============================================================================
- Name        : marelab-solar-deamon.c
- Author      : 
- Version     :
- Copyright   : Marc Philipp Hammermann (c) 2012
- Description : marelab deamon that is the controller of the system
- ============================================================================
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ * Name        : marelab-solar-deamon.cpp
+ * Author      : Marc Philipp Hammermann
+ * Version     :
+ * Copyright © 2012 marc philipp hammermann  <marchammermann@googlemail.com>
+ *
+ * Description : This is the Deamon of the marelab system. Serving GUI and loading plugins
+ *
+ *
+ *
  */
 
 #include <iostream>
@@ -36,13 +52,18 @@
 
 #include "mconfig.h"
 
+
+
+
+
 //#include "marelab/LedString.h"
 //#include "marelab/LedTimerListe.h"
 #include "marelab/IncomingMsg.h"
 #include "json/json.h"
 #include "json/writer.h"
 #include "json/reader.h"
-#include "marelabconf.h"
+
+#include "marelab/ConfigMarelab.h"
 #include "marelab/ipccom.h"
 #include "marelab/PluginRegistry.h"
 #include "marelab/MoonPhase.h"
@@ -64,6 +85,7 @@
 
 
 
+
 // On Linux, you must compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
 #ifndef _REENTRANT
@@ -76,12 +98,16 @@ using namespace std;
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+/*
+ * Global marleab config objects
+ */
+ConfigMarelab marlabConfig;
 
 /*
  * Registry for all marelab plugins scanned during
  * startup of the deamon
  */
-PluginRegistry pluginRegistry;
+PluginRegistry *pluginRegistry;
 
 /*
  * OBJ that are saved to a Config file
@@ -89,6 +115,7 @@ PluginRegistry pluginRegistry;
  */
 Bus *bus = new Bus();				// marelab bus system
 //LedTimerListe ledListe;				// List of all LED Strings
+
 
 
 
@@ -100,7 +127,7 @@ time_t 			tim;				// SystemTime
 
 volatile int bStop = false;			// To stop threads
 
-ipccom ipcs;						// Linux IPC Sockets/Queue
+ipccom *ipcs;						// Linux IPC Sockets/Queue this is the communication channel cgi deamon cgi
 
 
 static void child_handler(int signum)
@@ -133,9 +160,9 @@ static void daemonize( const char *lockfile )
 
     /* Drop user if there is one, and we were run as root */
     if ( getuid() == 0 || geteuid() == 0 ) {
-        struct passwd *pw = getpwnam(RUN_AS_USER);
+        struct passwd *pw = getpwnam( marlabConfig.getCfRunAsUser().c_str());
         if ( pw ) {
-        	string runsuer = RUN_AS_USER;
+        	string runsuer = marlabConfig.getCfRunAsUser();
         	MLOG::log("daemonize: setting user to " + runsuer ,__LINE__,__FILE__);
             setuid( pw->pw_uid );
         }
@@ -201,7 +228,7 @@ static void daemonize( const char *lockfile )
 }
 
 void SendMsgBack(string msg){
-	if (ipcs.sendSockServer(msg))
+	if (ipcs->sendSockServer(msg))
 			MLOG::log("Sending message back: "+msg,__LINE__,__FILE__);
 	else
 			MLOG::log("ERROR sending back message :"+msg,__LINE__,__FILE__);
@@ -291,7 +318,7 @@ void mcu_PORTSCAN(){
 }
 
 void mcu_VERSION(){
-	string ver = nucleusversion;
+	string ver = marlabConfig.getCfNucleusVersion();
 	string retmsg = "{\"COMMAND\":\"GET_mcu_VERSION\",\"PARAMETER\":\""+ver+"\"}";
 	SendMsgBack(retmsg);
 }
@@ -373,7 +400,7 @@ void  mcu_PLUGINSCAN(){
  */
 void PLUGIN_JAVASCRIPTFILES(string command){
 
-	string namelist = pluginRegistry.JSONgetPluginFileNames();
+	string namelist = pluginRegistry->JSONgetPluginFileNames();
 	MLOG::log("PLUGIN_JAVASCRIPTFILES: sending these Plugin Names: "+namelist ,__LINE__,__FILE__);
 	string retmsg = "{\"COMMAND\":\"PLUGIN_JAVASCRIPTFILES\",\"PARAMETER\":["+namelist+"]}";
 	SendMsgBack(retmsg);
@@ -382,7 +409,7 @@ void PLUGIN_JAVASCRIPTFILES(string command){
 void READ_CONFIG(string command, string plugin_name) {
 	string output;
 
-	PluginObject* pluginobj = pluginRegistry.GetPluginWithName(plugin_name);
+	PluginObject* pluginobj = pluginRegistry->GetPluginWithName(plugin_name);
 	if (pluginobj!=NULL){
 		pluginobj->plugin->GetConfigAsJSON(output);
 		//cout << output << endl;
@@ -396,7 +423,7 @@ void READ_CONFIG(string command, string plugin_name) {
 
 void SAVE_CONFIG(string command, string plugin_name,Json::Value& para) {
 	string output;
-	PluginObject* pluginobj = pluginRegistry.GetPluginWithName(plugin_name);
+	PluginObject* pluginobj = pluginRegistry->GetPluginWithName(plugin_name);
 	pluginobj->plugin->SetConfigAsJSON(para);
 	cout << para.toStyledString()<< endl;
 	configRegistry.writeConfig();
@@ -417,9 +444,9 @@ void SAVE_CONFIG(string command, string plugin_name,Json::Value& para) {
 void GET_PLUGININFO(string command, string plugin_name){
 	string output;
 
-	PluginObject* pluginobj = pluginRegistry.GetPluginWithName(plugin_name);
+	//PluginObject* pluginobj = pluginRegistry.GetPluginWithName(plugin_name);
 	Json::Value plugins;
-	pluginRegistry.SerializeAjax(plugins);
+	pluginRegistry->SerializeAjax(plugins);
 	string plugs = plugins.toStyledString();
 	//cout << plugs;
 	//string retmsg = "{\"COMMAND\":\"GET_PLUGININFO\",\"PARAMETER\":\""+plugs+"\"}";
@@ -494,9 +521,9 @@ void *marelab_Socket_thread(void *)
 	while (1) /*Endlosschleife*/
 	{
 	// Incoming Msg per socket
-	if (ipcs.recvSock()) {
+	if (ipcs->recvSock()) {
 		//MLOG::log("marelab_Socket_thread: input = ["+ipcs.getMsg()+"]",__LINE__,__FILE__);
-		if (ParseIncomingMsg(ipcs.getMsg()) == true) {
+		if (ParseIncomingMsg(ipcs->getMsg()) == true) {
 			string command = msgin.getCommand().asString();
 
 			if (command.compare("EXIT") == 0) {
@@ -505,7 +532,7 @@ void *marelab_Socket_thread(void *)
 			}
 
 			else if (command.compare("mcu_VERSION") == 0) {
-				string ver = nucleusversion;
+				string ver = marlabConfig.getCfNucleusVersion();
 				MLOG::log("marelab_Socket_thread: mcu_Version:"+ ver +" ...",__LINE__,__FILE__);
 				mcu_VERSION();
 
@@ -598,12 +625,13 @@ void *marelab_Socket_thread(void *)
 	}
 	// Incomig MSG can't be parsed
 	else{
-		MLOG::log("marelab_Socket_thread: MSG ["+ipcs.getMsg()+"] unknowen  ...",__LINE__,__FILE__);
+		MLOG::log("marelab_Socket_thread: MSG ["+ipcs->getMsg()+"] unknowen  ...",__LINE__,__FILE__);
 		// Sending Back Result for the incoming msg
 		string retmsg = "Received MSG is unknown by the deamon";
 		SendMsgBack(retmsg);
 	}
 	}
+	return 0;
 }
 
 
@@ -612,7 +640,8 @@ void marelab_daemon_entry_point()
 	MLOG::log( "marelab_daemon_entry_poin: marelab deepblue deamon starting now...",__LINE__,__FILE__ );
 
 	try{
-		ipcs.openServer();
+		ipcs = new ipccom(&marlabConfig);
+		ipcs->openServer();
 	}
 	catch(string &Exception){
 		MLOG::log( "marelab_daemon_entry_poin: ERROR="+Exception+ " ... terminating deamon...",__LINE__,__FILE__ );
@@ -635,7 +664,7 @@ void marelab_daemon_entry_point()
 	while (1)
 	{
 		tim=time(NULL);
-		tm *timeNow = localtime(&tim);						// Get the time now
+		//tm *timeNow = localtime(&tim);						// Get the time now
 		//syslog(MLOG_ERR, "COMMAND [%s] unknown  ...",command.c_str());
 		/* DO MARELAB ACTIONS CONTROLLING HARDWARE DEVICES CONECTED TO MARELAB          */
 		/* Iterate over the LedChannels and change the dimm values if needed            */
@@ -654,8 +683,15 @@ void marelab_daemon_entry_point()
 
 
 int main( int argc, char *argv[] ) {
+	// First action add the global Config Object
+	configRegistry.addObj(&marlabConfig);
+	// And lets read it first logging needs some of the values there
+	configRegistry.readConfig();
+
+
+
     /* Initialize the logging interface */
-	openlog( DAEMON_NAME, LOG_PID, LOG_LOCAL5 );
+	openlog( marlabConfig.getCfDaemonName().c_str(), LOG_PID, LOG_LOCAL5 );
 
     MLOG::log("Starting marelab-deepblue-deamon...",__LINE__,__FILE__);
 
@@ -678,16 +714,18 @@ int main( int argc, char *argv[] ) {
     }
 
 
+    configRegistry.addObj(&marlabConfig);
     /*
      * The Registry for marelab plugins
      */
-    pluginRegistry.ScanForPlugins();
+    pluginRegistry = new PluginRegistry(&marlabConfig);
+    pluginRegistry->ScanForPlugins();
 
     /*
      * Adding all objects that needs config values from the Config File
      */
     configRegistry.addObj(bus);
-    pluginRegistry.PluginsAddToConfig(&configRegistry);
+    pluginRegistry->PluginsAddToConfig(&configRegistry);
     //configRegistry.addObj(&ledListe);
 
     configRegistry.readConfig();

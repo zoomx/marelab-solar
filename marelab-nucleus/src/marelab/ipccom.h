@@ -9,11 +9,12 @@
 #include <cstring>
 #include <sys/socket.h>
 #include <sys/un.h>
-
-#include "marelabconf.h"
+#include "ConfigMarelab.h"
 
 #ifndef IPCCOM_H_
 #define IPCCOM_H_
+
+#define TRANSFER_BUFFER 9192
 
 namespace std {
 
@@ -24,11 +25,12 @@ private:
 	int socketid;
 	int socketret;
 	char sockbuf[TRANSFER_BUFFER];
-
+	ConfigMarelab *configMarelab;
 	string rcvString;
 
+
 public:
-	ipccom();
+	ipccom(ConfigMarelab *configMarelab);
 	void openServer();
 	void openClient();
 

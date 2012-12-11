@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include "ConfigRegister.h"
 #include "Plugin.hpp"
+#include "ConfigMarelab.h"
 
 using namespace std;
 
@@ -35,9 +36,10 @@ public:
 class PluginRegistry : public IJsonSerializable{
 private:
 	vector<PluginObject*> pluginList;
+	ConfigMarelab* configMarelab;
 
 public:
-	PluginRegistry();
+	PluginRegistry(ConfigMarelab *configMarelab);
 	virtual ~PluginRegistry(){
 		ClearRegistry();
 	}
