@@ -1,26 +1,55 @@
+// Delay function needed because Script files getting loaded as defined, somtimes later defined 
+// functions loaded first
+function pausecomp(millis) {
+	var date = new Date();
+	var curDate = null;
+
+	do {
+		curDate = new Date();
+	} while (curDate - date < millis);
+} 
+
+
 loadjscssfile("script/css/ui.jqgrid.css", "css");
+pausecomp(10);
 loadjscssfile("script/src/i18n/grid.locale-en.js", "js");
+pausecomp(10);
 //jQuery.jgrid.no_legacy_api = true;
+loadjscssfile("script/js/jquery.jqGrid.src.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/grid.base.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/grid.common.js", "js");
-loadjscssfile("script/src/grid.formedit.js", "js");
-loadjscssfile("script/src/grid.inlinedit.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/grid.custom.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/jquery.fmatter.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/grid.jqueryui.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/jqModal.js", "js");
+pausecomp(10);
 loadjscssfile("script/src/jqDnR.js", "js");
+pausecomp(10);
+loadjscssfile("script/src/grid.formedit.js", "js");
+pausecomp(10);
+loadjscssfile("script/src/grid.inlinedit.js", "js");
+pausecomp(10);
 loadjscssfile("script/RGraph/libraries/RGraph.common.core.js", "js");
+pausecomp(10);
 loadjscssfile("script/RGraph/libraries/RGraph.common.dynamic.js", "js");
+pausecomp(10);
 loadjscssfile("script/RGraph/libraries/RGraph.common.context.js","js");
+pausecomp(10);
 loadjscssfile("script/RGraph/libraries/RGraph.line.js", "js");
 
 function LedDimmer() {
 	alert("Hello world I'm form the Plugin LedDimmer");
 }
 
-var line; // RGraph Chart object
-var canvas_width = ($(window).width() - 150);
+var line; 										// RGraph Chart object
+var canvas_width = ($(window).width() - 150);	// RGraph canvas width
+
 var leds = [];
 var keyLeds = [];
 var LDI2CHANNEL = [];
@@ -47,7 +76,7 @@ $(window).resize(function() {
 	waitForFinalEvent(function() {
 		Graph2Data();
 		ReSizeCanvas();
-		line = GetLedGraph("cvs", leds, keyLeds);
+		line = Graph("cvs", leds, keyLeds);
 	}, 500, "some unique string");
 });
 
@@ -63,41 +92,58 @@ function LedDimmer_Init() {
 	$("#BUTTON_RGBLED").button( {icons: {primary: "ui-icon-refresh ui-icon-refresh-1-n"}, text: true } );
 	$("#BUTTON_RGB2LED").button( {icons: {primary: "ui-icon-refresh ui-icon-refresh-1-n"}, text: true } );
 	
-	DrawGraphs();
-	Graph2Data();
-	ReSizeCanvas();
-	line = GetLedGraph("cvs", leds, keyLeds);
 	
-	// Event Listener for Context Menu
+	GetDataToGraph();
+	line = Graph("cvs", leds, keyLeds);
+	Graph2Data();
+	
+	// The drawing again is needed to resize to the browser size
+	ReSizeCanvas();
+	line = Graph("cvs", leds, keyLeds);
+	
+	// Event Listener for Context Menu (RGB)
 	RGraph.AddCustomEventListener(line, 'oncontextmenu', myListener);
 	
 	// Add the pulldown for RGB Selcet to the RGB Dialog
 	GenerateLedDropDown();
+	
+	// Close the table led grid on init
+	jQuery("#list4").setGridState('hidden');
 }
 
+//GRAPH DRAWINGS
+//formats the json cgi result to use by RGraph
+function GetDataToGraph() {
+	//line = GetLedGraph("timer",moon, light1, light2, light3);
+	var LEDliste = getMareLabLeds();
 
+	leds = [];
+	keyLeds = [];
+	LDI2CHANNEL = [];
+	LDNUMBER = [];
 
-
-if (window.addEventListener) {
-	window.addEventListener('DOMContentLoaded', DrawGraphs, false);
-} else if (!RGraph.isOld()) {
-	document.attachEvent("onDOMContentLoaded", DrawGraphs);
-} else {
-	multiOnload(DrawGraphs);
+	for (x in LEDliste.LedListe) {
+		leds[x] = LEDliste.LedListe[x].cell[3];
+		keyLeds[x] = LEDliste.LedListe[x].cell[1];
+		LDI2CHANNEL[x] = LEDliste.LedListe[x].cell[2];
+		LDNUMBER[x] = LEDliste.LedListe[x].cell[0];
+	}
+	
+	
 }
 
-// Resizes the canvas after the size of the sourounding div & redraws it
+//Resizes the canvas after the size of the sourounding div & redraws it
 function ReSizeCanvas() {
 	div = $("#RECHTS").width();
 	var c = document.getElementById('cvs');
 	if (c != null) {
 		render_width = div;
 		c.width = div;
+		console.log("REMOVE GRAPH");
 		RGraph.ObjectRegistry.Clear();
 	}
-	
-	//jQuery("#list4").setGridWidth(div);
 }
+
 
 // CHART HANDLING SETTING & GETTING DATA FROM THE
 // GRID CHART OF LEDS
@@ -112,8 +158,9 @@ function Convert2Int(arr) {
 	return "[" + stringLED + "]";
 }
 
-function GetLedGraph(id, arrayLeds, keyLeds) {
+function Graph(id, arrayLeds, keyLeds) {
 	//line = new RGraph.Line('cvs', [4,5,8,7,6,4,3,5], [7,1,6,9,4,6,5,2]);
+	console.log("Created Graph");
 	line = new RGraph.Line(id, arrayLeds);
 	line.Set('chart.linewidth', 2);
 	line.Set('chart.background.grid.autofit', true);
@@ -144,39 +191,17 @@ function GetLedGraph(id, arrayLeds, keyLeds) {
 }
 
 /*
-// Holt alle LEDs & LED Texte vom marelab
+// Gets all LEDs & LED Texte from marelab
 ///////////////////////////////////////////////////////				
  */
 function getMareLabLeds() {
 	var jsonLEDS = getMarelabData('COMMAND=READ_CONFIG&PARAMETER=LedDimmer');
-	/*for (x in jsonLEDS) {alert (jsonLEDS[x].LED_CH_NAME + " = " + jsonLEDS[x].LED_CH_VALUE );	}*/
+	
 	// Drawing the editable table data of the Ledstings
 	renderLedTable(jsonLEDS);
 	return jsonLEDS;
 }
 
-// GRAPH DRAWINGS
-// formats the json cgi result to use by RGraph
-function DrawGraphs() {
-	//line = GetLedGraph("timer",moon, light1, light2, light3);
-	var LEDliste = getMareLabLeds();
-
-	leds = [];
-	keyLeds = [];
-	LDI2CHANNEL = [];
-	LDNUMBER = [];
-
-	for (x in LEDliste.LedListe) {
-		leds[x] = LEDliste.LedListe[x].cell[3];
-		keyLeds[x] = LEDliste.LedListe[x].cell[1];
-		LDI2CHANNEL[x] = LEDliste.LedListe[x].cell[2];
-		LDNUMBER[x] = LEDliste.LedListe[x].cell[0];
-	}
-	//leds[47] = LEDliste.LedListe[0].cell[3];
-	//keyLeds[47] = LEDliste.LedListe[0].cell[1];
-	line = GetLedGraph("cvs", leds, keyLeds);
-	//line.Draw();
-}
 
 /*
  *Gets the LED settings from the graphic
@@ -266,13 +291,16 @@ function renderLedTable(jsonLEDS) {
 							repeatitems : true,
 							root : "LedListe",
 							records : function(obj) {
+								console.log("JSON TABLE READER");
 								console.log(obj);
 								return obj.LedListe.size;
 							}
 						},
-						
+
 						height : 160,
-						width : render_width, // Added render_width thats the size of the right content area even after resize
+						width : render_width, // Added render_width thats the
+												// size of the right content
+												// area even after resize
 						colNames : [ 'No', 'Description', 'Channel' ],
 						colModel : [ {
 							name : 'LDNUMBER',
@@ -293,33 +321,57 @@ function renderLedTable(jsonLEDS) {
 							editable : true,
 							edittype : "text"
 						}, ],
-						//multiselect: true,
-						//pagination:true,
+						// multiselect: true,
+						// pagination:true,
 						pager : $('#pager1'),
 						rowNum : 10,
 						rowList : [ 5, 10, 20, 50 ],
 						sortname : 'id',
 						sortorder : 'desc',
 						viewrecords : true,
-						//scroll: true,
+						// scroll: true,
 						scrollrows : true,
-						
+
 						onSelectRow : function(id) {
 							if (id && id !== lastsel) {
 								jQuery('#list4').jqGrid('restoreRow', lastsel);
 								lastsel = id;
 								jQuery('#list4').jqGrid('editRow', id, true);
 							}
-							console.log("Saving data");
+							console.log("edit row data");
 						},
-
+						
+						/*afterInsertRow: function(rowid,rowdata,rowelem){
+							alert ("RowInsert");
+						},
+						*/
+						// evertime a complete event is made something might have changed on the table
+						// so the grid is refrehed to reflect the table changes
+						gridComplete:function(){
+							GetDataToGraph();
+							ReSizeCanvas();
+							line = Graph("cvs", leds, keyLeds);
+						},
+						beforeRequest:function(){
+							console.log("TABLE BEFORE REQUEST DATA");
+							// First Save the Graph Curve because maybe something has been edit
+							// while adding / deleting a new led string 
+							//console.log("save graph");
+							//led_SAVECURVE();
+						},
+				
 						serializeRowData : function(postData) {
-							/* prePOST from edit ROW 
-							 *  the postData gets rearranged adding the LEDCHART data to
-							 *  it and the COMMAND so marelab-deamon knows what to do
+						
+								console.log("TABLE BEFORE REQUEST DATA");
+								
+							/*
+							 * prePOST from edit ROW the postData gets
+							 * rearranged adding the LEDCHART data to it and the
+							 * COMMAND so marelab-deamon knows what to do
 							 */
-
+							
 							console.log(postData);
+							console.log("save table");
 							sendCommand = new Object();
 							sendCommand.COMMAND = "SAVELEDROW";
 							sendCommand.LDID = postData.id;
@@ -333,33 +385,32 @@ function renderLedTable(jsonLEDS) {
 						url : '/cgi/marelab-cgi?COMMAND=READ_CONFIG&PARAMETER=LedDimmer',
 						editurl : '/cgi/marelab-cgi?COMMAND=SAVE_CONFIG&PARAMETER=LedDimmer',
 						mtype : "POST",
-						//editUrl:'/clientArray',
+						// editUrl:'/clientArray',
 						caption : "<h2>Channel Setup</h2>"
 					});
+	
+	 // Before we save edited Data we save the graph!
+	 $.extend($.jgrid.edit, {
+         beforeSubmit: function (postData) {
+        	 console.log(" BEFORE SUBMIT save graph");
+        	 Graph2Data();
+        	 led_SAVECURVE();
+        	 return [true, ''];
+         }
+     });
 
-	jQuery("#list4").jqGrid('navGrid', '#pager1', {
+	
+
+	jQuery("#list4").jqGrid('navGrid','#pager1', {
 		del : true,
 		add : true,
 		edit : true,
 		search : false
-	});
-	//jQuery("#list4").jqGrid('inlineNav',"#list4");
-
-	jQuery("#list4").jqGrid('navGrid', "new", {
-		addCaption : "Add Led Channel",
-		editCaption : "Edit Record",
-		bSubmit : "Save",
-		bCancel : "Cancel",
-		bClose : "Close",
-		saveData : "Data has been changed! Save changes?",
-		bYes : "Yes",
-		bNo : "No",
-		bExit : "Cancel"
-	});
-	jQuery("#list4").setGridState('hidden');
+	});	
 }
 
-////////////////////////////////////////////////////////////////////
+
+// //////////////////////////////////////////////////////////////////
 // DAEMON COMMUNICATION                                           //
 ////////////////////////////////////////////////////////////////////
 
