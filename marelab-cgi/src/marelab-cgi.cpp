@@ -114,23 +114,39 @@ int main(int argc, char **argv)
         */
        vector <FormEntry> vf = formData.getElements();
        string parameterString;
-       for (unsigned int c=0; c < vf.size();c++ )
-       {
-    	   syslog( LOG_ERR, "POST ...[%s]-[%s]", vf[c].getName().c_str(),vf[c].getValue().c_str());
-    	   if ( c == 0 )
-    		   parameterString = "\""+vf[c].getName()+"\":\""+vf[c].getValue()+"\"";
-    	   else
-    		   parameterString = parameterString + ",\"" +vf[c].getName()+"\":\""+vf[c].getValue()+"\"";
+       int trigger_comma = 0;
+       for (unsigned int c=0; c < vf.size();c++ ){
+			syslog(LOG_ERR, "POST ...[%s]-[%s]", vf[c].getName().c_str(),vf[c].getValue().c_str());
+			if (vf[c].getName() == "PARAMETER") {
+				if (trigger_comma == 0){
+					parameterString = vf[c].getValue();
+					trigger_comma = 1;
+				}
+				else{
+					parameterString = parameterString +","+ vf[c].getValue();
+				}
+			}
+			if ((vf[c].getName() != "PARAMETER") && (vf[c].getName() != "COMMAND")) {
+				if (trigger_comma == 0) {
+					parameterString = "\"" + vf[c].getName() + "\":\""+ vf[c].getValue() + "\"";
+					trigger_comma = 1;
+				}
+				else{
+					parameterString = parameterString + ",\"" + vf[c].getName() + "\":\""+ vf[c].getValue() + "\"";
+				}
+			}
        }
 
        cout << "CGI: " << parameterString << endl;
        /*
-        * SENDING COMMAND & PARAMETER TO DEAMON AND WAIT
+        * SENDING COMMAND & P	ARAMETER TO DEAMON AND WAIT
         * FOR RESPONSE OR TIMEOUT
         */
        string string2send;
-
-       string2send = "{\"COMMAND\":\""+scommand+"\",\"PARAMETER\":{"+parameterString+"}}\0";
+       if (parameterString.compare(0,1,"[")==0)
+    	   string2send = "{\"COMMAND\":\""+scommand+"\",\"PARAMETER\":"+parameterString+"}\0";
+       else
+    	   string2send = "{\"COMMAND\":\""+scommand+"\",\"PARAMETER\":{"+parameterString+"}}\0";
        cout << "CGI2DEAMON: " << string2send << endl;
 
        // Socket Communication
