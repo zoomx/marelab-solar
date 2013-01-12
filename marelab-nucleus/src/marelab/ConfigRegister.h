@@ -1,8 +1,24 @@
 /*
- * ConfigRegister.h
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  Created on: Nov 9, 2012
- *      Author: marc philipp hammermann
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ * Author      : Marc Philipp Hammermann
+ * Version     :
+ * Copyright © 2013 marc philipp hammermann  <marchammermann@googlemail.com>
+ *
+ *
+ *
  *
  */
 
@@ -51,7 +67,7 @@ public:
     	IJsonSerializable* configObj;
     	std::ofstream out(CONFIGFILE);
     	Json::Value serializeRoot;
-
+    	cout << "TRY TO WRITE CONFIG :" << endl;
     	for (unsigned int i=0; i<registry.size(); i++) {
     		configObj =  registry[i];
     		configObj->Serialize(serializeRoot);
@@ -59,8 +75,10 @@ public:
 
     	Json::StyledWriter writer;
     	output = writer.write(serializeRoot);
+    	//cout << output << endl;
     	out << output;
     	out.close();
+    	cout << "CONFIG WRITTEN" << endl;
     }
     ;
 
@@ -96,6 +114,29 @@ public:
     	}
     }
     ;
+
+    void readConfigPart(IJsonSerializable* configObj){
+        	Json::Value rootin;
+        	Json::Reader reader;
+        	ifstream in(CONFIGFILE);
+        	std::string input,line;
+
+        	// Read File
+        	while(getline(in, line))
+        	    	  input += line + "\n";
+
+
+        	if (ConfigRegister::Deserialize(configObj,input)){
+        	    MLOG::log("Config: parse successfull",__LINE__,__FILE__);
+        	}
+        	else{
+        		// report to the user the failure and their locations in the document.
+        		string conffile = CONFIGFILE;
+        	    string readererr= reader.getFormatedErrorMessages();
+        	    MLOG::log("ERROR: Failed to parse configuration: " + conffile +" "+ readererr,__LINE__,__FILE__);
+        	}
+       }
+        ;
 
     static bool Serialize(IJsonSerializable* pObj, std::string& output,Json::Value serializeRoot) {
     		if (pObj == NULL)

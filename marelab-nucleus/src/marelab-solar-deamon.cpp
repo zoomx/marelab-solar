@@ -69,11 +69,12 @@
 #include "marelab/MoonPhase.h"
 
 // MODBUS INCLUDES
+/*
 #include "modbus/modbus.h"
 #include "modbus/marelab_modbus.h"
 #include "modbus/MBD.h"
 #include "modbus/marelab_bus.h"
-
+*/
 #include "marelab/ConfigRegister.h"
 #include "json/json.h"
 #include "marelab/IJsonSerializable.h"
@@ -113,7 +114,7 @@ PluginRegistry *pluginRegistry;
  * OBJ that are saved to a Config file
  * the ConfigRegister class does the job
  */
-Bus *bus = new Bus();				// marelab bus system
+//****** Bus *bus = new Bus();				// marelab bus system
 //LedTimerListe ledListe;				// List of all LED Strings
 
 
@@ -269,11 +270,11 @@ void mcu_BUSSAVE() {
 	string parity = para["PARITY"].asString();
 
 	//printf("WEB MSG BUSSAVE :%s,%d,%d,%s,%d",port.c_str(),baud,databits,parity[0],stopbits);
-	bus->setBaud(baud);
-	bus->setComport(port);
-	bus->setDatabits(databits);
-	bus->setParity(parity[0]);
-	bus->setStopbits(stopbits);
+	//****** bus->setBaud(baud);
+	//****** bus->setComport(port);
+	//****** bus->setDatabits(databits);
+	//****** bus->setParity(parity[0]);
+	//****** bus->setStopbits(stopbits);
 
 	configRegistry.writeConfig();
 
@@ -287,8 +288,8 @@ void mcu_BUSSAVE() {
 void mcu_BUSRESTORE() {
 	string busstring;
 	Json::Value busobj;
-	bus->Serialize( busobj);
-	busstring = busobj.toStyledString();
+	//****** bus->Serialize( busobj);
+	//****** busstring = busobj.toStyledString();
 	MLOG::log("mcu_BUSRESTORE: Return "+busstring,__LINE__,__FILE__);
 
 	string retmsg = "{\"COMMAND\":\"mcu_BUSSAVE\",\"PARAMETER\":"+busstring+"}";
@@ -299,8 +300,9 @@ void mcu_BUSRESTORE() {
 void mcu_PORTSCAN(){
 	MLOG::log("mcu_PORTSCAN: PORT SCAN ACTIVATED",__LINE__,__FILE__);
 
-	list<string> l = bus->getComList();
-	list<string>::iterator it = l.begin();
+	//****** list<string> l = bus->getComList();
+	//****** list<string>::iterator it = l.begin();
+	/*
 	string ports;
 	if (!l.empty())
 		ports = "{\"port\":\""+*it + "\"}";
@@ -313,7 +315,10 @@ void mcu_PORTSCAN(){
 			cout << *it << endl;
 		}
 	}
-	string retmsg = "{\"COMMAND\":\"mcu_PORTSCAN\",\"PARAMETER\":["+ports+"]}";
+	*/
+	//******  string retmsg = "{\"COMMAND\":\"mcu_PORTSCAN\",\"PARAMETER\":["+ports+"]}";
+	string retmsg = "{\"COMMAND\":\"mcu_PORTSCAN\",\"PARAMETER\":[""]}";
+
 	SendMsgBack(retmsg);
 }
 
@@ -327,15 +332,15 @@ void mcu_BUSSCAN(){
 	string returnval="";
 	try{
 		MLOG::log("mcu_BUSSCAN: Command:  mcu_BUSSCAN() .. ",__LINE__,__FILE__);
-		bus->ScanBus();
+		//****** bus->ScanBus();
 
 		string muuid;
 		string name;
 		// Generate the List with all BUS members and send it back to the GUI
 
-		int size = bus->getMBdList().size();
+		//****** int size = bus->getMBdList().size();
 		MLOG::log("mcu_BUSSCAN: --Dump MBD LIST------------------------------------",__LINE__,__FILE__);
-		for(int i=0; i<size; i++)
+		/*for(int i=0; i<size; i++)
 		{
 			returnval = returnval + "[{\"ADRESS\":\""+ i2str(bus->getMBdList()[i].MBD_getAdress())  + "\"}";
 			returnval = returnval + ",{\"MAJOR\":\""+ i2str(bus->getMBdList()[i].MBD_getMajorVersion())  + "\"}";
@@ -346,7 +351,7 @@ void mcu_BUSSCAN(){
 			else
 				returnval = returnval + ",{\"UUID\":\""+ bus->getMBdList()[i].MBD_getUUID()  + "\"}],";
 		}
-
+*/
 		string retmsg = "{\"COMMAND\":\"mcu_PORTSCAN\",\"PARAMETER\":["+returnval+"]}";
 
 		SendMsgBack(retmsg);
@@ -365,13 +370,14 @@ void  mcu_PLUGINSCAN(){
 	string returnval="";
 	try{
 		MLOG::log("mcu_BUSSCAN: Command:  mcu_BUSSCAN() .. ",__LINE__,__FILE__);
-		bus->ScanBus();
+		//****** bus->ScanBus();
 
 		string muuid;
 		string name;
 		// Generate the List with all BUS members and send it back to the GUI
 
-		int size = bus->getMBdList().size();
+		//****** int size = bus->getMBdList().size();
+		/*
 		MLOG::log("mcu_BUSSCAN: --Dump MBD LIST------------------------------------",__LINE__,__FILE__);
 		for(int i=0; i<size; i++)
 		{
@@ -382,7 +388,7 @@ void  mcu_PLUGINSCAN(){
 			else
 				returnval = returnval + ",{\"UUID\":\""+ bus->getMBdList()[i].MBD_getUUID()  + "\"}],";
 		}
-
+		*/
 		string retmsg = "{\"COMMAND\":\"mcu_BUSSCAN\",\"PARAMETER\":["+returnval+"]}";
 
 		SendMsgBack(retmsg);
@@ -395,6 +401,34 @@ void  mcu_PLUGINSCAN(){
 
 }
 
+
+
+
+/*
+ * Saves the nuclueus plugin logic -> adapter binding
+ */
+void mcu_NUCLEUS_CONFIGSAVE(){
+
+	    Json::Value para = msgin.getParameter();
+	    cout <<"PARAMETER"<< para.toStyledString() << endl;
+	    Json::Value element;
+	    MLOG::log("mcu_NUCLEUS_CONFIGSAVE: " + para.toStyledString(),__LINE__,__FILE__);
+	    PluginObject* logicplugin;
+	    PluginObject* adapterplugin;
+	    int i;
+		for (i = 0; i <  para.size(); i++ )
+		{
+		  element = para[i];
+		  logicplugin = pluginRegistry->GetPluginWithName(element["Name"].asString());
+		  adapterplugin = pluginRegistry->GetAdapterWithName(element["Adapter"].asString());
+		  logicplugin->adapter = adapterplugin->plugin;
+		}
+
+		configRegistry.writeConfig();
+	    string retmsg = "{\"COMMAND\":\"mcu_NUCLEUS_CONFIGSAVE\"}";
+		SendMsgBack(retmsg);
+}
+
 /*
  * Itterates throw the plugin registry and gives back all pluginnames
  */
@@ -402,10 +436,14 @@ void PLUGIN_JAVASCRIPTFILES(string command){
 
 	string namelist = pluginRegistry->JSONgetPluginFileNames();
 	MLOG::log("PLUGIN_JAVASCRIPTFILES: sending these Plugin Names: "+namelist ,__LINE__,__FILE__);
-	string retmsg = "{\"COMMAND\":\"PLUGIN_JAVASCRIPTFILES\",\"PARAMETER\":["+namelist+"]}";
+	string retmsg = "{\"COMMAND\":\"PLUGIN_JAVASCRIPTFILES\",\"PARAMETER\":"+namelist+"}";
 	SendMsgBack(retmsg);
 }
 
+
+/*
+ * Reading config of a plugin
+ */
 void READ_CONFIG(string command, string plugin_name) {
 	string output;
 
@@ -417,33 +455,26 @@ void READ_CONFIG(string command, string plugin_name) {
 	}
 	//
 	else{
-
+		SendMsgBack("UNKNOWN PLUGIN :" +plugin_name);
 	}
 }
 
+/*
+ * Saving config of a plugin
+ */
 void SAVE_CONFIG(string command, string plugin_name,Json::Value& para) {
 	string output;
 	PluginObject* pluginobj = pluginRegistry->GetPluginWithName(plugin_name);
 	pluginobj->plugin->SetConfigAsJSON(para);
-	cout << para.toStyledString()<< endl;
+	//cout << para.toStyledString()<< endl;
 	configRegistry.writeConfig();
 	SendMsgBack("{COMMAND=SAVE_CONFIG}");
-
-	/*if (pluginobj!=NULL){
-		pluginobj->plugin->SetConfigAsJSON(para);
-
-	}
-	else{
-
-	}
-	*/
 }
 
 
 // Get Infos of the installed plugins
 void GET_PLUGININFO(string command, string plugin_name){
 	string output;
-
 	//PluginObject* pluginobj = pluginRegistry.GetPluginWithName(plugin_name);
 	Json::Value plugins;
 	pluginRegistry->SerializeAjax(plugins);
@@ -465,6 +496,15 @@ void GET_PLUGININFO(string command, string plugin_name){
 	//}
 	 */
 
+}
+
+// Get Infos of the installed Adapter plugins
+void GET_ADAPTER_PLUGININFO(string command, string plugin_name){
+	string output;
+	Json::Value plugins;
+	pluginRegistry->SerializeAdapter(plugins);
+	string plugs = plugins.toStyledString();
+	SendMsgBack(plugs);
 }
 
 
@@ -522,7 +562,8 @@ void *marelab_Socket_thread(void *)
 	{
 	// Incoming Msg per socket
 	if (ipcs->recvSock()) {
-		//MLOG::log("marelab_Socket_thread: input = ["+ipcs.getMsg()+"]",__LINE__,__FILE__);
+
+		MLOG::log("marelab_Socket_thread: MSG ["+ipcs->getMsg()+"]...",__LINE__,__FILE__);
 		if (ParseIncomingMsg(ipcs->getMsg()) == true) {
 			string command = msgin.getCommand().asString();
 
@@ -569,14 +610,18 @@ void *marelab_Socket_thread(void *)
 				MLOG::log("marelab_Socket_thread: mcu_BUSRESTORE() ...",__LINE__,__FILE__);
 				mcu_BUSRESTORE();
 			}
-
+			else if (command.compare("mcu_NUCLEUS_CONFIGSAVE") == 0) {
+				MLOG::log("marelab_Socket_thread: mcu_NUCLEUS_CONFIGSAVE() ...",__LINE__,__FILE__);
+				mcu_NUCLEUS_CONFIGSAVE();
+			}
 			/* Send Log Messages to the client */
 			else if (command.compare("deamon_LOG") == 0) {
 				// Remove log Info b
 				//MLOG::log("marelab_Socket_thread: deamon_MLOG() ...",__LINE__,__FILE__);
 				deamon_MLOG();
-
 			}
+
+
 
 
 
@@ -589,22 +634,31 @@ void *marelab_Socket_thread(void *)
 				MLOG::log("marelab_Socket_thread: GET THE PLUGIN_JAVASCRIPTFILES...",__LINE__,__FILE__);
 				PLUGIN_JAVASCRIPTFILES(command);
 			}
-			/* Plugin Info Name & Version */
+			/* Logic Plugin Info Name & Version */
 			else if (command.compare("GET_PLUGININFO") == 0) {
-				MLOG::log("marelab_Socket_thread: GET THE PLUGIN INFO ...",__LINE__,__FILE__);
+				MLOG::log("marelab_Socket_thread: GET THE Logic PLUGIN INFO ...",__LINE__,__FILE__);
 				GET_PLUGININFO(command,msgin.getPlugin());
 			}
+
+			/* Adapter Plugin Info Name & Version */
+			else if (command.compare("GET_ADAPTERINFO") == 0) {
+				MLOG::log("marelab_Socket_thread: GET THE Adapter PLUGIN INFO ...",__LINE__,__FILE__);
+				GET_ADAPTER_PLUGININFO(command,msgin.getPlugin());
+			}
+
 			/* Read Plugin Config */
 			else if (command.compare("READ_CONFIG") == 0) {
 				MLOG::log("marelab_Socket_thread: PLUGIN wants to READ_CONFIG ...",__LINE__,__FILE__);
 				READ_CONFIG(command, msgin.getPlugin());
 			}
-			/* Save Plugin Config */
+			/* Save Plugin settings of a single Plugin */
 			else if (command.compare("SAVE_CONFIG") == 0) {
-				MLOG::log("marelab_Socket_thread: SAVELEDROW(command) ...",__LINE__,__FILE__);
+				//MLOG::log("marelab_Socket_thread: SAVELEDROW(command) ...",__LINE__,__FILE__);
 				Json::Value para = msgin.getParameter();
+				MLOG::log("marelab_Socket_thread: SAVE_CONFIG("+msgin.getPlugin()+") ...",__LINE__,__FILE__);
 				SAVE_CONFIG(command,msgin.getPlugin(),para);
 			}
+
 			else {
 				/**
 				string output;
@@ -621,6 +675,12 @@ void *marelab_Socket_thread(void *)
 			 if (ipcs.sendSockServer("RETURN FORM DAEMON"))
 			 syslog( MLOG_ERR, "Send msg to client..");
 			 }*/
+		}
+		// MSG CAN'T BE TRANSLATED
+		else{
+			MLOG::log("marelab_Socket_thread: MSG ["+ipcs->getMsg()+"] unknowen  ...",__LINE__,__FILE__);
+			string retmsg = "Received MSG is unknown by the deamon";
+			SendMsgBack(retmsg);
 		}
 	}
 	// Incomig MSG can't be parsed
@@ -685,8 +745,10 @@ void marelab_daemon_entry_point()
 int main( int argc, char *argv[] ) {
 	// First action add the global Config Object
 	configRegistry.addObj(&marlabConfig);
-	// And lets read it first logging needs some of the values there
-	configRegistry.readConfig();
+	// Read only a part of the ConfigFile to have a
+	// a running nucleus some parts can only be used
+	// after plugins are loaded.
+	configRegistry.readConfigPart(&marlabConfig);
 
 
 
@@ -714,26 +776,30 @@ int main( int argc, char *argv[] ) {
     }
 
 
-    configRegistry.addObj(&marlabConfig);
+    //configRegistry.addObj(&marlabConfig);
     /*
      * The Registry for marelab plugins
      */
     pluginRegistry = new PluginRegistry(&marlabConfig);
+    // Scans the plugins dir and adds founded plugs to the registry
     pluginRegistry->ScanForPlugins();
+
+    // Adding Plugin Registry for Saving Logic->Adapter bindings
+    configRegistry.addObj(pluginRegistry);
 
     /*
      * Adding all objects that needs config values from the Config File
      */
-    configRegistry.addObj(bus);
-    pluginRegistry->PluginsAddToConfig(&configRegistry);
+    //******  configRegistry.addObj(bus);
+    //pluginRegistry->PluginsAddToConfig(&configRegistry);
     //configRegistry.addObj(&ledListe);
 
     configRegistry.readConfig();
 
 
 
-    if (bus->ConnectBus())
-    	bus->ScanBus();
+    //******  if (bus->ConnectBus())
+    //****** 	bus->ScanBus();
 
 
     /*

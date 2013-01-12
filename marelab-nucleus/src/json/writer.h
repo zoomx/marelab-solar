@@ -31,7 +31,6 @@ namespace Json {
    public:
       FastWriter();
       virtual ~FastWriter(){}
-
       void enableYAMLCompatibility();
 
    public: // overridden from Writer

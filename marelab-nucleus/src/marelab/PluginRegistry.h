@@ -1,12 +1,25 @@
 /*
- * PluginRegistry.h
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  Created on: May 5, 2012
- *      Author: marelab
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *      This class loads all shared lib at runtime that are device drivers for marelab
- *      these drivers have to be in a directory that is configered over the
- *       marelabconf.h PLUGINDIR is the path constat
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ * Author      : Marc Philipp Hammermann
+ * Version     :
+ * Copyright © 2013 marc philipp hammermann  <marchammermann@googlemail.com>
+ *
+ *
+ *
+ *
  */
 
 #ifndef PLUGINREGISTRY_H_
@@ -25,36 +38,68 @@
 
 using namespace std;
 
-class PluginObject{
+class PluginObject : public IJsonSerializable{
 public:
 	void* pluginHandle;
 	create_t* plugin_createFunc;
 	destroy_t* plugin_destroyFunc;
 	Plugin* plugin;
+	string typeOfPlugin;  		// Signals Hardware or function Plugin a function Plugin gets linked to a hardware Plugin
+	Plugin* adapter;			// A logic Plugin has to get a Adapter Plugin assigned to work
+
+    //IO
+	// Special Save function to Save all Logic Plugin to Adapter Bindings
+    void SaveConfig( Json::Value& root ){
+    	root["LogicPluginName"] 			= plugin->getName();
+    	root["LogicPluginNameVersion"]		= plugin->getVersion();
+    	root["AdapterPluginName"]			= adapter->getName();
+    	root["AdapterPluginNameVersion"]	= adapter->getVersion();
+    };
+    void ReadConfig( Json::Value& root){
+
+    };
+
+    virtual void Serialize( Json::Value& root ){
+    	plugin->Serialize(root);
+    };
+    virtual void Deserialize( Json::Value& root){
+    	plugin->Deserialize(root);
+    };
+    virtual void SerializeAjax( Json::Value& root ){};
+    virtual void GetConfigAsJSON( string& configval){};
+    virtual void SetConfigAsJSON( Json::Value& para){};
 };
+
+
 
 class PluginRegistry : public IJsonSerializable{
 private:
-	vector<PluginObject*> pluginList;
+	vector<PluginObject*> 	pluginList;			// List of LOGIC plugs
+	vector<PluginObject*> 	adapterList;		// List of Adapter Hardware plugs
+
 	ConfigMarelab* configMarelab;
+
 
 public:
 	PluginRegistry(ConfigMarelab *configMarelab);
 	virtual ~PluginRegistry(){
 		ClearRegistry();
 	}
-	void ClearRegistry();
+	void ClearRegistry();						// Removes Logic & Adapter Plugs
 	int ScanForPlugins(); 						// scans for Plugins
 	bool isFilePlugin(string filename); 		// checks file is it a plugin
 	int loadPluging(string filename);			// loads a Plugin
 	void PluginsAddToConfig(ConfigRegister *configRegistry);
 	PluginObject* GetPluginWithName(string name);
+	PluginObject* GetAdapterWithName(string name);
 	string JSONgetPluginFileNames();
+	void SerializeAdapter( Json::Value& root );
 
 	//PERSISTENT INTERFACE
 	virtual void Serialize( Json::Value& root );
 	virtual void Deserialize( Json::Value& root);
 	virtual void SerializeAjax( Json::Value& root );
+
 };
 
 
