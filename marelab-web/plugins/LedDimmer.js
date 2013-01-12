@@ -72,6 +72,8 @@ loadjscssfile("script/RGraph/libraries/RGraph.common.context.js","js");
 pausecomp(10);
 loadjscssfile("script/RGraph/libraries/RGraph.line.js", "js");
 
+
+
 function LedDimmer() {
 	alert("Hello world I'm form the Plugin LedDimmer");
 }
@@ -79,13 +81,18 @@ function LedDimmer() {
 var line; 										// RGraph Chart object
 var canvas_width = ($(window).width() - 150);	// RGraph canvas width
 
-var leds = [];
-var keyLeds = [];
-var LDI2CHANNEL = [];
-var LDNUMBER = [];
+var leds = [];						// Array of Array with dim values 24H a 30min
+var keyLeds = [];					
+var LDI2CHANNEL = [];				// Channel of the Led String
+var LDNUMBER = [];					
+var CHARTCOLOR = [];				// Array from nucleus config with color for the Graph Line
+
+
 var render_width;
 var plugin_info = "marelab";
 var timers = {};
+
+var selected_row=0;
 
 var waitForFinalEvent = (function() {
 	var timers = {};
@@ -144,18 +151,20 @@ function LedDimmer_Init() {
 //formats the json cgi result to use by RGraph
 function GetDataToGraph() {
 	//line = GetLedGraph("timer",moon, light1, light2, light3);
-	var LEDliste = getMareLabLeds();
+	var LEDliste = getMareLabLedsTableRender();
 
 	leds = [];
 	keyLeds = [];
 	LDI2CHANNEL = [];
 	LDNUMBER = [];
+	CHARTCOLOR=[];
 
 	for (x in LEDliste.LedListe) {
 		leds[x] = LEDliste.LedListe[x].cell[3];
 		keyLeds[x] = LEDliste.LedListe[x].cell[1];
 		LDI2CHANNEL[x] = LEDliste.LedListe[x].cell[2];
 		LDNUMBER[x] = LEDliste.LedListe[x].cell[0];
+		CHARTCOLOR[x] = LEDliste.LedListe[x].cell[4];
 	}
 	
 	
@@ -191,6 +200,7 @@ function Graph(id, arrayLeds, keyLeds) {
 	//line = new RGraph.Line('cvs', [4,5,8,7,6,4,3,5], [7,1,6,9,4,6,5,2]);
 	console.log("Created Graph");
 	line = new RGraph.Line(id, arrayLeds);
+	line.Set('chart.colors',CHARTCOLOR);
 	line.Set('chart.linewidth', 2);
 	line.Set('chart.background.grid.autofit', true);
 	line.Set('chart.background.grid.autofit.numhlines', 10);
@@ -223,8 +233,8 @@ function Graph(id, arrayLeds, keyLeds) {
 // Gets all LEDs & LED Texte from marelab
 ///////////////////////////////////////////////////////				
  */
-function getMareLabLeds() {
-	var jsonLEDS = getMarelabData('COMMAND=READ_CONFIG&PARAMETER=LedDimmer');
+function getMareLabLedsTableRender() {
+	var jsonLEDS = getMarelabData('COMMAND=READ_CONFIG&PARAMETER="PLUGIN":"LedDimmer"');
 	
 	// Drawing the editable table data of the Ledstings
 	renderLedTable(jsonLEDS);
@@ -255,6 +265,8 @@ $(function() {
 		heightStyle : "fill"
 	});
 });
+
+
 
 ////////////////////////////////////////////////////////////////////
 // RENDER TABLE GRID                                              //
@@ -291,14 +303,11 @@ function FormatTableData(Data) {
 			"cell" : []
 		}
 		data.rows[x].cell = row;
-		//data.rows[x]=row;
+		//data.rows[x]=row;		
 	}
 	return data;
-	//for(var i=0;i<mydata.length;i++) {
-	//	jQuery("#list4").jqGrid('addRowData',i+1,mydata[i]);
-	//}
-
 }
+
 
 function renderLedTable(jsonLEDS) {
 	// DYN TABLE LEDS
@@ -327,10 +336,8 @@ function renderLedTable(jsonLEDS) {
 						},
 
 						height : 160,
-						width : render_width, // Added render_width thats the
-												// size of the right content
-												// area even after resize
-						colNames : [ 'No', 'Description', 'Channel' ],
+						width : 400, 
+						colNames : [ 'No', 'Description', 'Channel' , 'Color'],
 						colModel : [ {
 							name : 'LDNUMBER',
 							index : 'LDNUMBER',
@@ -339,24 +346,30 @@ function renderLedTable(jsonLEDS) {
 						}, {
 							name : 'LDNAME',
 							index : 'LDNAME',
-							width : 200,
+							width : 280,
 							sortable : false,
 							editable : true,
 							edittype : "text"
 						}, {
 							name : 'LDI2CCHANNEL',
 							index : 'LDI2CCHANNEL',
-							width : 100,
+							width : 40,
 							editable : true,
 							edittype : "text"
-						}, ],
+						},{ 
+							name: 'add', width: 40, sortable: false, search: false,
+		                      formatter:function(){
+		                    	  return "<span class='ui-icon ui-icon-plus' ></span>"
+		                      }
+						},
+		                ],
 						// multiselect: true,
 						// pagination:true,
 						pager : $('#pager1'),
 						rowNum : 10,
 						rowList : [ 5, 10, 20, 50 ],
-						sortname : 'id',
-						sortorder : 'desc',
+						sortname : "id",
+						sortorder : "desc",
 						viewrecords : true,
 						// scroll: true,
 						scrollrows : true,
@@ -377,12 +390,23 @@ function renderLedTable(jsonLEDS) {
 						// evertime a complete event is made something might have changed on the table
 						// so the grid is refrehed to reflect the table changes
 						gridComplete:function(){
+							// Set the color of the ID colum with the color of thev value retrieved 
+							// from config
+							
 							GetDataToGraph();
 							ReSizeCanvas();
 							line = Graph("cvs", leds, keyLeds);
+							colorobj = new Object();
+							for (i=0; i <=  $("#list4").getGridParam("reccount");i++) {
+								colorobj.background = CHARTCOLOR[i];
+								//alert ("ROW:"+i+" COLOR: "+CHARTCOLOR[i]);
+								$("#list4").setCell (LDNUMBER[i],0,"",colorobj);
+							}
 						},
+						
+			
 						beforeRequest:function(){
-							console.log("TABLE BEFORE REQUEST DATA");
+							console.log("TABLE BEFORE REQUEST DATA beforeRequest");
 							// First Save the Graph Curve because maybe something has been edit
 							// while adding / deleting a new led string 
 							//console.log("save graph");
@@ -391,7 +415,7 @@ function renderLedTable(jsonLEDS) {
 				
 						serializeRowData : function(postData) {
 						
-								console.log("TABLE BEFORE REQUEST DATA");
+								console.log("TABLE BEFORE REQUEST DATA serializeRowData");
 								
 							/*
 							 * prePOST from edit ROW the postData gets
@@ -407,15 +431,25 @@ function renderLedTable(jsonLEDS) {
 							sendCommand.LDNAME = postData.LDNAME;
 							sendCommand.LDI2CCHANNEL = postData.LDI2CCHANNEL;
 							sendCommand.LDLEDARRAY = Convert2Int(line.original_data[postData.id - 1]);
+							sendCommand.CHARTCOLOR = CHARTCOLOR[(postData.id-1) ]
 							console.log(sendCommand);
 							return sendCommand;
 						},
 
-						url : '/cgi/marelab-cgi?COMMAND=READ_CONFIG&PARAMETER=LedDimmer',
-						editurl : '/cgi/marelab-cgi?COMMAND=SAVE_CONFIG&PARAMETER=LedDimmer',
+						url : '/cgi/marelab-cgi?COMMAND=READ_CONFIG&PARAMETER="PLUGIN":"LedDimmer"',
+						editurl : '/cgi/marelab-cgi?COMMAND=SAVE_CONFIG&PARAMETER="PLUGIN":"LedDimmer"',
 						mtype : "POST",
 						// editUrl:'/clientArray',
-						caption : "<h2>Channel Setup</h2>"
+						caption : "<h2>Channel Setup</h2>",
+						
+						 onCellSelect :  function(rowid, index, contents, event) {
+							 if (index == 3) {
+								 //alert(rowid);
+								 selected_row =rowid
+								 ColorDialog();
+							 }
+                         }
+						
 					});
 	
 	 // Before we save edited Data we save the graph!
@@ -423,7 +457,7 @@ function renderLedTable(jsonLEDS) {
          beforeSubmit: function (postData) {
         	 console.log(" BEFORE SUBMIT save graph");
         	 Graph2Data();
-        	 led_SAVECURVE();
+        	 //led_SAVECURVE();
         	 return [true, ''];
          }
      });
@@ -436,7 +470,27 @@ function renderLedTable(jsonLEDS) {
 		edit : true,
 		search : false
 	});	
+	
+	
 }
+
+
+function ColorDialog(){
+	GraphRgbSelector();
+}
+
+function callback(color) { 
+	colorobj = new Object();
+	colorobj.background = color;
+	CHARTCOLOR[(selected_row-1)]=color;
+	jQuery("#list4").setCell (selected_row,0,"",colorobj);
+}
+
+var GraphRgbSelector = function() {
+	$('#colorpicker').farbtastic(callback);
+	$('#GraphRgbSelector' ).dialog();
+}
+
 
 
 // //////////////////////////////////////////////////////////////////
@@ -463,9 +517,11 @@ function led_SAVECURVE() {
 		sendCommand.LDNAME = keyLeds[x];
 		sendCommand.LDI2CCHANNEL = LDI2CHANNEL[x];
 		sendCommand.LDLEDARRAY = ledarr;
-		para = 'LedDimmer","LDID":"' + sendCommand.LDID + '","LDNAME":"'
+		sendCommand.CHARTCOLOR = CHARTCOLOR[x];
+		para = '"PLUGIN":"LedDimmer","LDID":"' + sendCommand.LDID + '","LDNAME":"'
 				+ sendCommand.LDNAME + '","LDI2CCHANNEL":"'
-				+ sendCommand.LDI2CCHANNEL + '","LDLEDARRAY":"' + ledarr;
+				+ sendCommand.LDI2CCHANNEL + '","LDLEDARRAY":' + ledarr+',"CHARTCOLOR":"' + sendCommand.CHARTCOLOR+'"';
+		//alert(para);
 		getMarelabData('COMMAND=SAVE_CONFIG&PARAMETER=' + para);
 	}
 }

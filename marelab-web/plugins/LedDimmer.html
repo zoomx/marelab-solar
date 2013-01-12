@@ -3,8 +3,7 @@
 		<div id="titel_setup_content">
 		<div id="TOOLBAR-TITEL">Brightness Setup</div>
 		<div id="TOOLBAR">
-			<button id="BUTTON_RGBLED" onclick="OpenRGBDialog()">RGB Picker</button>
-			<button id="BUTTON_SAVELED" onclick="led_SAVECURVE()">Save</button> 
+			<input type="image" onclick="led_SAVECURVE();" src="img/savef.png" width="32" height="32" alt="save config" />
 		</div>
 		</div>
 		<canvas id="cvs" width="700" height="400"> </canvas>
@@ -21,12 +20,27 @@
 					</tr>
 				</tbody>
 			</table>
-			
 		</form>
-		<button onclick="cleartest();">CLEAR</button>
+		 <!-- <button onClick="testCO();"></button>-->
 		</div>
 	</div>
 </div>
+
+
+<!-- RGB Color Dialog selecting graph & text color of LED strings entrys -->
+<div id="GraphRgbSelector" style="display: none" title="LED RGB Color">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <th align="left"  scope="col">
+		<input type="text" id="color" name="color" value="#123456" />
+    	<div id="colorpicker"></div>
+    </th>
+  </tr>
+</table>
+</div>
+
+
+<!-- RGB Color Dialog for the RGB Light designer wihich sets 3 Leds at the same time -->
 <div id="dialogRGB" style="display: none" title="LED RGB Color">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
   <tr>
@@ -63,9 +77,10 @@
 		</select>
     </td>
   </tr>
-  <tr>
+  <!-- <tr>
     <td colspan="2"><button id="BUTTON_RGB2LED" onclick="OpenRGBDialog()">Save RGB to LED</button></td>
   </tr>
+   -->
 </table>
 </div>
 
