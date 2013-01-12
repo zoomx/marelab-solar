@@ -1,8 +1,25 @@
 /*
- * LedTimerListe.cpp
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  Created on: 28.02.2012
- *      Author: ths
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ * Author      : Marc Philipp Hammermann
+ * Version     :
+ * Copyright © 2013 marc philipp hammermann  <marchammermann@googlemail.com>
+ *
+ *
+ *
+ *
  */
 
 #include "LedTimerListe.h"
@@ -30,6 +47,7 @@
 
 #include "LedString.h"
 #include "LedTimerListe.h"
+//#include "plugin-config.h"
 
 #define c_fileversion "0.1"
 
@@ -77,20 +95,26 @@ void LedTimerListe::SaveFile()
 /*
  * Add or Changes a LED Channel
  */
-void LedTimerListe::AddChangeLed(string led_number, string led_channel, string led_name, string led_intensity)
+void LedTimerListe::AddChangeLed(string led_number, string led_channel, string led_name, string led_intensity, string chartcolor)
 {
 	int ledno;
 	LedString *ls;
 	// Find the channel object
-	cout << led_number << endl;
-	if (led_number.compare("_empty")==0 )
+	string compare_Led="_empty";
+	cout << "AddChangeLed No:" << led_number << endl;
+	if (led_number == compare_Led )
 	{
-		cout << "NEW LED" << endl;
-		ledno = CountLed()+1;
+		cout << "LedTimerListe::AddChangeLed ADD NEW LED" << endl;
+	    // CALC the ID
+		int size = LD_StringListe.size();
+		ledno =  LD_StringListe[size-1].getLdNumber()+1;
+
+		//ledno = CountLed()+1;
 		ls = new LedString();
 		ls->setLdNumber(ledno);
 		ls->setLdName(led_name);
 		ls->setLdI2cChannel(atoi(led_channel.c_str()));
+		ls->setChartColor(chartcolor);
 		this->AddLed(*ls);
 		// LED intensität umsetzen
 		led_intensity = "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]";
@@ -98,10 +122,14 @@ void LedTimerListe::AddChangeLed(string led_number, string led_channel, string l
 	}
 	else
 	{
+		cout << "LedTimerListe::AddChangeLed CHANGED OLD LED" << endl;
 		ledno = atoi(led_number.c_str());
-		ls = GetLed(ledno-1);
+		cout << "LED-NO to change:" << ledno << endl;
+		ls = GetLed(ledno);
 		ls->setLdName(led_name);
 		ls->setLdI2cChannel(atoi(led_channel.c_str()));
+		ls->setChartColor(chartcolor);
+		ls->setLdNumber(ledno);
 	}
 
 
@@ -116,18 +144,22 @@ void LedTimerListe::AddChangeLed(string led_number, string led_channel, string l
 	for (unsigned int xx = 0; xx < str_arr.size(); xx++){
 		ls->setLdTimeArray(xx,atoi(str_arr.at(xx).c_str()));
 	}
-	printLedListe();
+	//printLedListe();
 	//SaveFile();		//Save the LedTimerList to a file
 }
 
 int LedTimerListe::DelLed(int led_number)
 {
-
 	LedString *ledstring;
-	ledstring = &LD_StringListe.operator [](led_number);
-	LD_StringListe.erase(LD_StringListe.begin()+led_number);
-	lastPower.erase(lastPower.begin()+led_number);
-	//delete ledstring;
+	int size = LD_StringListe.size();
+	for(int i=0; i<size; i++){
+		if (LD_StringListe[i].getLdNumber()==led_number){
+			ledstring = &LD_StringListe.operator [](i);
+			cout << "DELETING LED NO :" << ledstring->getLdNumber()<< endl;
+			LD_StringListe.erase(LD_StringListe.begin()+(i));
+			lastPower.erase(lastPower.begin()+i);
+		}
+	}
 	return 0;
 }
 
@@ -138,7 +170,16 @@ int LedTimerListe::CountLed()
 
 LedString* LedTimerListe::GetLed(int led_number)
 {
-	return &LD_StringListe.operator [](led_number);
+	LedString *ledstring;
+	int size = LD_StringListe.size();
+	for (int i = 0; i < size; i++) {
+		cout << "ldid: " << LD_StringListe[i].getLdNumber() << endl;
+		if (LD_StringListe[i].getLdNumber() == led_number) {
+			ledstring = &LD_StringListe.operator [](i);
+		}
+	}
+	//return &LD_StringListe.operator [](led_number);
+	return ledstring;
 }
 
 void LedTimerListe::Clear()
@@ -171,6 +212,7 @@ void LedTimerListe::SerializeAjax( Json::Value& root )
 		rowitem.append(LD_StringListe[i].getLdName());
 		rowitem.append(LD_StringListe[i].getLdI2cChannel());
 		rowitem.append(ledvalues);
+		rowitem.append(LD_StringListe[i].getChartColor());
 		zeile["cell"] = rowitem;
 
 		root["LedListe"].append(zeile);
@@ -185,12 +227,12 @@ void LedTimerListe::SerializeAjax( Json::Value& root )
 void LedTimerListe::Serialize( Json::Value& root )
 {
    // serialize primitives
-	int size = LD_StringListe.size();
-	Json::Value timer_value(Json::arrayValue); // []
+	unsigned int size = LD_StringListe.size();
+	//Json::Value timer_value(Json::arrayValue); // []
 	//arr_value.append("Test1");
 	//arr_value.append("Test2");
 	Json::Value obj_value(Json::objectValue);
-	for(int i=0; i<size; i++)
+	for(unsigned int i=0; i<size; i++)
 	{
 		obj_value["LedString"]["LDNAME"] = LD_StringListe[i].getLdName();
 		obj_value["LedString"]["LDNUMBER"] = LD_StringListe[i].getLdNumber();
@@ -199,6 +241,7 @@ void LedTimerListe::Serialize( Json::Value& root )
 		{
 			obj_value["LedString"]["LDTIMEARRAY"].append(LD_StringListe[i].getLdTimeArray()[ii]);
 		}
+		obj_value["LedString"]["CHARTCOLOR"]=  LD_StringListe[i].getChartColor();
 		root["LedListe"].append(obj_value);
 		obj_value.clear();
 		obj_value["LedString"]["LDTIMEARRAY"].clear();
@@ -218,34 +261,35 @@ void LedTimerListe::printLedListe()
 
 void LedTimerListe::Deserialize( Json::Value& root )
 {
-	string version =  root.get("version", "").asString();
 
+	Json::Value config;
+	string version =  root.get("version", "").asString();
 	// Delete of the list
 	this->Clear();
-
-	int countLedLeisten = root.get("LedListe", "").size();
+	unsigned int a = 0;
+	config = root["LedDimmer"][a];
+	unsigned int countLedLeisten = config.get("LedListe", "").size();
 	//string ledchannelcout = i2str(countLedLeisten);
 	//MLOG::log("PLUGIN LED: Count of Dim Channels = "+ledchannelcout,__LINE__,__FILE__);
-	cout << "PLUGIN LED: Count of Dim Channels =" << countLedLeisten << endl;
-	for(int i=0; i<countLedLeisten; i++)
+	cout << "OSMOSIS LED: Count of Dim Channels =" << countLedLeisten << endl;
+	for(unsigned int i=0; i<countLedLeisten; i++)
 	{
 		LedString ledstring;
 		//cout << root.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString() << "\n";
-		ledstring.setLdName(root.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString());
-		ledstring.setLdI2cChannel(root.get("LedListe", "")[i].get("LedString","").get("LDI2CCHANNEL","").asInt());
-		ledstring.setLdNumber(root.get("LedListe", "")[i].get("LedString","").get("LDNUMBER","").asInt());
+		ledstring.setLdName(config.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString());
+		ledstring.setLdI2cChannel(config.get("LedListe", "")[i].get("LedString","").get("LDI2CCHANNEL","").asInt());
+		ledstring.setLdNumber(config.get("LedListe", "")[i].get("LedString","").get("LDNUMBER","").asInt());
 		for (int ii=0;ii<TIMERSTORECOUNT;ii++)
 		{
-			ledstring.setLdTimeArray( ii,root.get("LedListe", "")[i].get("LedString","").get("LDTIMEARRAY","")[ii].asInt());
+			ledstring.setLdTimeArray( ii,config.get("LedListe", "")[i].get("LedString","").get("LDTIMEARRAY","")[ii].asInt());
 		}
+		ledstring.setChartColor(config.get("LedListe", "")[i].get("LedString","").get("CHARTCOLOR","").asString());
+		cout << "CHARTCOLOR ADD:" << config.get("LedListe", "")[i].get("LedString","").get("CHARTCOLOR","").asString() << endl;
 		this->AddLed(ledstring);
 	}
-/*
-   m_nTestInt = root.get("LedString",0).asInt();
-   m_fTestFloat = root.get("LedString", 0.0).asDouble();
-   m_TestString = root.get("LedString", "").asString();
-   m_bTestBool = root.get("LedString", false).asBool();
-*/
+
+
+
 }
 
 vector<string> LedTimerListe::split(const string& strValue, char separator)
