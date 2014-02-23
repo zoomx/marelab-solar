@@ -29,9 +29,9 @@
 #define DAEMON_NAME "marelab-nucleus"
 
 /* Change this to whatever your daemon should place his PID lock file */
-#define DAEMON_LOCK_PATH "/home/marelab/git/marelab-solar/marelab-nucleus/marelab_cfg/"
+#define DAEMON_LOCK_PATH "/mnt/marelab/marelab-nucleus/marelab_cfg/"
 #define DAEMON_NAME_LOCK "marelab-nucleus-lock"
-#define DEAMON_PATH "/home/marelab/git/marelab-solar/marelab-nucleus"
+#define DEAMON_PATH "/mnt/marelab/marelab-nucleus"
 
 /* Change this to whatever your daemon places the ipc*/
 //#define DAEMON_PIPE_IN "/home/marelab/msp"
@@ -44,14 +44,14 @@
 /* FIFO PIPE BUFFER SIZE */
 #define TRANSFER_BUFFER 9192
 
-#define SOCK_PATH "/home/marelab/git/marelab-solar/marelab-nucleus/marelab_cfg/marelab_socket"
+#define SOCK_PATH "/mnt/marelab/marelab-nucleus/marelab_cfg/marelab_socket"
 
 
 
-#define CONFIGFILE "/home/marelab/git/marelab-solar/marelab-nucleus/marelab_cfg/marelabsolar.cfg"
+#define CONFIGFILE "/mnt/marelab/marelab-nucleus/marelab_cfg/marelabsolar.cfg"
 //#define CONFIGFILETEST "/mnt/arm-marelab-dev/marelab-deepblue/marelab-nucleus/marelab_cfg/marelabsolartest.cfg"
 
-#define PLUGINDIR "/home/marelab/git/marelab-solar/marelab-nucleus/plugins/"
+#define PLUGINDIR "/mnt/marelab/marelab-nucleus/plugins/"
 
 #define nucleusversion "Nucleus 0.2"
 

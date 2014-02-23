@@ -33,8 +33,8 @@
 #include <iostream>
 #include <dlfcn.h>
 #include "ConfigRegister.h"
-#include "Plugin.hpp"
-#include "ConfigMarelab.h"
+#include "../globals/Plugin.hpp"
+#include "ConfigNucleus.h"
 
 using namespace std;
 
@@ -77,11 +77,11 @@ private:
 	vector<PluginObject*> 	pluginList;			// List of LOGIC plugs
 	vector<PluginObject*> 	adapterList;		// List of Adapter Hardware plugs
 
-	ConfigMarelab* configMarelab;
+	ConfigNucleus* configMarelab;
 
 
 public:
-	PluginRegistry(ConfigMarelab *configMarelab);
+	PluginRegistry(ConfigNucleus *configMarelab);
 	virtual ~PluginRegistry(){
 		ClearRegistry();
 	}
@@ -89,7 +89,13 @@ public:
 	int ScanForPlugins(); 						// scans for Plugins
 	bool isFilePlugin(string filename); 		// checks file is it a plugin
 	int loadPluging(string filename);			// loads a Plugin
+	int getPluginCount(){ return pluginList.size();}
+	int getAdapterCount(){ return adapterList.size();}
+	Plugin* getPluginObject(int number){ return pluginList[number]->plugin;}
+	Plugin* getAdapterObject(int number){ return adapterList[number]->adapter;}
+	Plugin* getAdapterObject(string adapterName);
 	void PluginsAddToConfig(ConfigRegister *configRegistry);
+	PluginObject* GetPluginEntry(int id){ return pluginList[id];}
 	PluginObject* GetPluginWithName(string name);
 	PluginObject* GetAdapterWithName(string name);
 	string JSONgetPluginFileNames();

@@ -25,7 +25,7 @@
 //#include "LedString.h"
 //#include "LedTimerListe.h"
 #include "IncomingMsg.h"
-#include "IJsonSerializable.h"
+#include "../globals/IJsonSerializable.h"
 
 IncomingMsg::IncomingMsg()
 {

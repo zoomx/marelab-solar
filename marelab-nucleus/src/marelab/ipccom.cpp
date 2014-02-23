@@ -31,7 +31,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <syslog.h>
-#include "ConfigMarelab.h"
+#include "ConfigNucleus.h"
 #include "ipccom.h"
 
 
@@ -41,7 +41,7 @@ namespace std {
 /*
  * Setup the Communictaion ipc socket
  */
-ipccom::ipccom(ConfigMarelab *configMarelab) {
+ipccom::ipccom(ConfigNucleus *configMarelab) {
 	this->configMarelab = configMarelab;
 }
 

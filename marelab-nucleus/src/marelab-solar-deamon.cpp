@@ -49,7 +49,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <sstream>
-
 #include "mconfig.h"
 
 
@@ -59,11 +58,11 @@
 //#include "marelab/LedString.h"
 //#include "marelab/LedTimerListe.h"
 #include "marelab/IncomingMsg.h"
-#include "json/json.h"
-#include "json/writer.h"
-#include "json/reader.h"
+#include "globals/json/json.h"
+#include "globals/json/writer.h"
+#include "globals/json/reader.h"
 
-#include "marelab/ConfigMarelab.h"
+#include "marelab/ConfigNucleus.h"
 #include "marelab/ipccom.h"
 #include "marelab/PluginRegistry.h"
 #include "marelab/MoonPhase.h"
@@ -76,8 +75,9 @@
 #include "modbus/marelab_bus.h"
 */
 #include "marelab/ConfigRegister.h"
-#include "json/json.h"
-#include "marelab/IJsonSerializable.h"
+#include "globals/json/json.h"
+#include "globals/IJsonSerializable.h"
+#include "globals/LConnection.h"
 #include "marelab/CJsonSerializer.h"
 #include "marelab/mlog.h"
 
@@ -102,7 +102,7 @@ using namespace std;
 /*
  * Global marleab config objects
  */
-ConfigMarelab marlabConfig;
+ConfigNucleus nucleusConfig;
 
 /*
  * Registry for all marelab plugins scanned during
@@ -130,7 +130,7 @@ volatile int bStop = false;			// To stop threads
 
 ipccom *ipcs;						// Linux IPC Sockets/Queue this is the communication channel cgi deamon cgi
 
-
+/*
 static void child_handler(int signum)
 {
     switch(signum) {
@@ -140,15 +140,16 @@ static void child_handler(int signum)
     }
 }
 
+
 static void daemonize( const char *lockfile )
 {
     pid_t pid, sid, parent;
     int lfp = -1;
 
-    /* already a daemon */
+    // already a daemon
     if ( getppid() == 1 ) return;
 
-    /* Create the lock file as the current user */
+    // Create the lock file as the current user
     if ( lockfile && lockfile[0] ) {
         lfp = open(lockfile,O_RDWR|O_CREAT,0640);
         if ( lfp < 0 ) {
@@ -159,75 +160,75 @@ static void daemonize( const char *lockfile )
         }
     }
 
-    /* Drop user if there is one, and we were run as root */
+    // Drop user if there is one, and we were run as root
     if ( getuid() == 0 || geteuid() == 0 ) {
-        struct passwd *pw = getpwnam( marlabConfig.getCfRunAsUser().c_str());
+        struct passwd *pw = getpwnam( nucleusConfig.getCfRunAsUser().c_str());
         if ( pw ) {
-        	string runsuer = marlabConfig.getCfRunAsUser();
+        	string runsuer = nucleusConfig.getCfRunAsUser();
         	MLOG::log("daemonize: setting user to " + runsuer ,__LINE__,__FILE__);
             setuid( pw->pw_uid );
         }
     }
 
-    /* Trap signals that we expect to recieve */
+    // Trap signals that we expect to recieve
     signal(SIGCHLD,child_handler);
     signal(SIGUSR1,child_handler);
     signal(SIGALRM,child_handler);
 
-    /* Fork off the parent process */
+    // Fork off the parent process
     pid = fork();
     if (pid < 0) {
     	MLOG::log("daemonize: unable to fork daemon, code=" +i2str(errno)+"("+strerror(errno)+")",__LINE__,__FILE__);
         exit(EXIT_FAILURE);
     }
-    /* If we got a good PID, then we can exit the parent process. */
+    // If we got a good PID, then we can exit the parent process.
     if (pid > 0) {
 
-        /* Wait for confirmation from the child via SIGTERM or SIGCHLD, or
-           for two seconds to elapse (SIGALRM).  pause() should not return. */
+        // Wait for confirmation from the child via SIGTERM or SIGCHLD, or
+        //   for two seconds to elapse (SIGALRM).  pause() should not return.
         alarm(2);
         pause();
 
         exit(EXIT_FAILURE);
     }
 
-    /* At this point we are executing as the child process */
+    // At this point we are executing as the child process
     parent = getppid();
 
-    /* Cancel certain signals */
-    signal(SIGCHLD,SIG_DFL); /* A child process dies */
-    signal(SIGTSTP,SIG_IGN); /* Various TTY signals */
+    // Cancel certain signals
+    signal(SIGCHLD,SIG_DFL);
+    signal(SIGTSTP,SIG_IGN);
     signal(SIGTTOU,SIG_IGN);
     signal(SIGTTIN,SIG_IGN);
-    signal(SIGHUP, SIG_IGN); /* Ignore hangup signal */
-    signal(SIGTERM,SIG_DFL); /* Die on SIGTERM */
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGTERM,SIG_DFL);
 
-    /* Change the file mode mask */
+    // Change the file mode mask
     umask(0);
 
-    /* Create a new SID for the child process */
+    // Create a new SID for the child process
     sid = setsid();
     if (sid < 0) {
     	MLOG::log("daemonize: unable to create a new session, code=" +i2str(errno)+"("+strerror(errno)+")",__LINE__,__FILE__);
         exit(EXIT_FAILURE);
     }
 
-    /* Change the current working directory.  This prevents the current
-       directory from being locked; hence not being able to remove it. */
+    // Change the current working directory.  This prevents the current
+    //   directory from being locked; hence not being able to remove it.
     if ((chdir("/")) < 0) {
     	MLOG::log("daemonize: unable to change directory to '/', code=" +i2str(errno)+"("+strerror(errno)+")",__LINE__,__FILE__);
         exit(EXIT_FAILURE);
     }
 
-    /* Redirect standard files to /dev/null */
+    // Redirect standard files to /dev/null
     freopen( "/dev/null", "r", stdin);
     freopen( "/dev/null", "w", stdout);
     freopen( "/dev/null", "w", stderr);
 
-    /* Tell the parent process that we are A-okay */
+    // Tell the parent process that we are A-okay
     kill( parent, SIGUSR1 );
 }
-
+*/
 void SendMsgBack(string msg){
 	if (ipcs->sendSockServer(msg))
 			MLOG::log("Sending message back: "+msg,__LINE__,__FILE__);
@@ -264,9 +265,9 @@ void mcu_BUSSAVE() {
 	MLOG::log("mcu_BUSSAVE: " + para.toStyledString(),__LINE__,__FILE__);
 
 	string port = para["PORT"].asString();
-	int baud = atoi(para["BAUD"].asString().c_str());
-	int databits = atoi(para["DATABITS"].asString().c_str());
-	int stopbits = atoi(para["STOPBITS"].asString().c_str());
+	//int baud = atoi(para["BAUD"].asString().c_str());
+	//int databits = atoi(para["DATABITS"].asString().c_str());
+	//int stopbits = atoi(para["STOPBITS"].asString().c_str());
 	string parity = para["PARITY"].asString();
 
 	//printf("WEB MSG BUSSAVE :%s,%d,%d,%s,%d",port.c_str(),baud,databits,parity[0],stopbits);
@@ -323,7 +324,7 @@ void mcu_PORTSCAN(){
 }
 
 void mcu_VERSION(){
-	string ver = marlabConfig.getCfNucleusVersion();
+	string ver = nucleusConfig.getCfNucleusVersion();
 	string retmsg = "{\"COMMAND\":\"GET_mcu_VERSION\",\"PARAMETER\":\""+ver+"\"}";
 	SendMsgBack(retmsg);
 }
@@ -415,7 +416,7 @@ void mcu_NUCLEUS_CONFIGSAVE(){
 	    MLOG::log("mcu_NUCLEUS_CONFIGSAVE: " + para.toStyledString(),__LINE__,__FILE__);
 	    PluginObject* logicplugin;
 	    PluginObject* adapterplugin;
-	    int i;
+	    unsigned int i;
 		for (i = 0; i <  para.size(); i++ )
 		{
 		  element = para[i];
@@ -471,6 +472,20 @@ void SAVE_CONFIG(string command, string plugin_name,Json::Value& para) {
 	SendMsgBack("{COMMAND=SAVE_CONFIG}");
 }
 
+/*
+ * Rrturns the HTML for a adapter to config it s parameters
+ */
+void ADAPTER_GET_CONFIG_HTML(string command, string plugin_name,Json::Value& para) {
+	string output;
+	PluginObject* pluginobj = pluginRegistry->GetPluginWithName(plugin_name);
+	// Finding the configured Adapter
+	output = pluginobj->adapter->getConfigHTML(plugin_name);
+	// Getting the HTML page code for the Adapter Config
+
+	// Returning the HTML page code to the client for showing
+	SendMsgBack("{\"COMMAND\":\"ADAPTER_GET_CONFIG_HTML\",\"HTML\":\""+output+"\"}");
+	//SendMsgBack("{ADAPTER_HTML:\""+plugin_name+"\"}");
+}
 
 // Get Infos of the installed plugins
 void GET_PLUGININFO(string command, string plugin_name){
@@ -540,6 +555,31 @@ void deamon_MLOG()
 	}
 
 }
+
+
+/*
+ * gets the list of connectors of the plugin -> pluginName
+ * and returns it as JSON Object
+ */
+Json::Value GetPluginConnectors(string pluginName){
+	Json::Value pluginConnectorList = Json::nullValue;
+	if (pluginRegistry->GetPluginWithName(pluginName)!=NULL)
+	{
+		if (pluginRegistry->GetPluginWithName(pluginName)->typeOfPlugin=="LOGIC"){
+			pluginConnectorList = pluginRegistry->GetPluginWithName(pluginName)->plugin->ConGetConnectorList();
+			return pluginConnectorList;
+		}
+	}
+	if (pluginRegistry->GetAdapterWithName(pluginName)!=NULL){
+		if (pluginRegistry->GetAdapterWithName(pluginName)->typeOfPlugin=="ADAPTER"){
+			pluginConnectorList = pluginRegistry->GetAdapterWithName(pluginName)->plugin->ConGetConnectorList();
+			return pluginConnectorList;
+		}
+	}
+	return pluginConnectorList;
+}
+
+
 /*
  * MAIN LOOP FOR COMUNICATION WITH THE MARELAB SYSTEM
  * THE DAEMON HAS A SOKET LISTENER for ipc messages. These ipc Messages controls
@@ -573,7 +613,7 @@ void *marelab_Socket_thread(void *)
 			}
 
 			else if (command.compare("mcu_VERSION") == 0) {
-				string ver = marlabConfig.getCfNucleusVersion();
+				string ver = nucleusConfig.getCfNucleusVersion();
 				MLOG::log("marelab_Socket_thread: mcu_Version:"+ ver +" ...",__LINE__,__FILE__);
 				mcu_VERSION();
 
@@ -658,17 +698,54 @@ void *marelab_Socket_thread(void *)
 				MLOG::log("marelab_Socket_thread: SAVE_CONFIG("+msgin.getPlugin()+") ...",__LINE__,__FILE__);
 				SAVE_CONFIG(command,msgin.getPlugin(),para);
 			}
+			/* Save Plugin settings of a single Plugin */
+			else if (command.compare("ADAPTER_GET_CONFIG_HTML") == 0) {
+				Json::Value para = msgin.getParameter();
+				MLOG::log("marelab_Socket_thread: ADAPTER_GET_CONFIG_HTML("+ msgin.getPlugin() + ") ...", __LINE__,__FILE__);
+				ADAPTER_GET_CONFIG_HTML(command,msgin.getPlugin(),para);
+				//SAVE_CONFIG(command, msgin.getPlugin(), para);
+			}
+
+
+			/*
+			 * ******************************************************************************
+			 * This part is responsible for Handling the logical & pyhsical Connectors
+			 */
+			else if (command.compare("GET_CONNECTOR_FOR_PLUGIN") == 0) {
+				Json::Value para = msgin.getParameter();
+				//MLOG::log("marelab_Socket_thread: GET_CONNECTOR_FOR_PLUGIN("+ msgin.getPlugin() + ") ...", __LINE__,__FILE__);
+				string connectorList = GetPluginConnectors(para["PLUGINNAME"].asString()).toStyledString();
+
+				SendMsgBack("{\"COMMAND\":\"GET_CONNECTOR_FOR_PLUGIN\",\"CONNECTOR\":"+connectorList+"}");
+			}
+
+
+
+
+
+
+
 
 			else {
-				/**
-				string output;
-				if (CJsonSerializer::SerializeAjax(&ledListe, output)) {
-					MLOG::log("marelab_Socket_thread: COMMAND ["+command+"] activated  ...",__LINE__,__FILE__);
-					// Sending Back Result for the incoming msg
-					if (ipcs.sendSockServer(output))
-						MLOG::log("marelab_Socket_thread: Send msg to client..",__LINE__,__FILE__);
-				}
-				*/
+				/*
+				 * Non of the Base Commands got triggerd so we go throu every Logic Plugin
+				 * and try to trigger the function there
+				 */
+
+				 Json::Value para = msgin.getParameter();
+				 cout <<"PARAMETER FOR PLUGINS "<< para.toStyledString() << endl;
+
+
+				 for (int LogicPluginNo = 0;LogicPluginNo < pluginRegistry->getPluginCount();LogicPluginNo++) {
+					cout << "FOR PLUGIN: " << pluginRegistry->GetPluginEntry(LogicPluginNo)->plugin->getName()<< endl;
+					pluginRegistry->getPluginObject(LogicPluginNo)->Command(pluginRegistry->GetPluginEntry(LogicPluginNo)->adapter,para);
+				 }
+
+				 SendMsgBack("{\"COMMAND\":\"PLUGIN\",\"SCAN\":\"OK\"}");
+
+
+
+
 			}/* else {
 			 syslog(MLOG_ERR, "COMMAND [%s] unknown  ...",command.c_str());
 			 // Sending Back Result for the incoming msg
@@ -695,12 +772,13 @@ void *marelab_Socket_thread(void *)
 }
 
 
+
 void marelab_daemon_entry_point()
 {
 	MLOG::log( "marelab_daemon_entry_poin: marelab deepblue deamon starting now...",__LINE__,__FILE__ );
 
 	try{
-		ipcs = new ipccom(&marlabConfig);
+		ipcs = new ipccom(&nucleusConfig);
 		ipcs->openServer();
 	}
 	catch(string &Exception){
@@ -711,7 +789,8 @@ void marelab_daemon_entry_point()
 
 	/* COMMAND RECV THREAD */
 	pthread_t mythread;
-	int code = pthread_create(&mythread,NULL, marelab_Socket_thread,NULL);
+	//int code =
+	pthread_create(&mythread,NULL, marelab_Socket_thread,NULL);
 
 	/* ENDLESS LOOP FOR PROCESSING */
 	//int tempp=0;
@@ -723,7 +802,7 @@ void marelab_daemon_entry_point()
 	/////////////////////////////////////////////////////////////////////////
 	while (1)
 	{
-		tim=time(NULL);
+		time(&tim);
 		//tm *timeNow = localtime(&tim);						// Get the time now
 		//syslog(MLOG_ERR, "COMMAND [%s] unknown  ...",command.c_str());
 		/* DO MARELAB ACTIONS CONTROLLING HARDWARE DEVICES CONECTED TO MARELAB          */
@@ -733,10 +812,15 @@ void marelab_daemon_entry_point()
 		 * CALLS ALL INSTALLED PLUGINS -> work FUNCTION
 		 */
 
+		Json::Value test;
+		for (int LogicPluginNo=0; LogicPluginNo < pluginRegistry->getPluginCount() ; LogicPluginNo++){
+			// Gets a logic Plugin & performance the work
+			//cout << "Adapter:" << pluginRegistry->GetPluginEntry(LogicPluginNo)->adapter->getName() <<endl;
+			pluginRegistry->getPluginObject(LogicPluginNo)->work(localtime(&tim),pluginRegistry->GetPluginEntry(LogicPluginNo)->adapter,test);
+			//pluginRegistry->GetPluginEntry(counter)->adapter->work(timeNow,NULL);
+		}
+		sleep(2);	// lets sleep a few ticks
 
-		//for (int counter=0; counter <  ledListe.CountLed(); counter++)
-		//	tempp = ledListe.GetPowerValue(counter,timeNow);
-		usleep(2000);										// lets sleep a few ticks
 	}
 }
 
@@ -744,16 +828,16 @@ void marelab_daemon_entry_point()
 
 int main( int argc, char *argv[] ) {
 	// First action add the global Config Object
-	configRegistry.addObj(&marlabConfig);
+	configRegistry.addObj(&nucleusConfig);
 	// Read only a part of the ConfigFile to have a
 	// a running nucleus some parts can only be used
 	// after plugins are loaded.
-	configRegistry.readConfigPart(&marlabConfig);
+	configRegistry.readConfigPart(&nucleusConfig);
 
 
 
     /* Initialize the logging interface */
-	openlog( marlabConfig.getCfDaemonName().c_str(), LOG_PID, LOG_LOCAL5 );
+	openlog( nucleusConfig.getCfDaemonName().c_str(), LOG_PID, LOG_LOCAL5 );
 
     MLOG::log("Starting marelab-deepblue-deamon...",__LINE__,__FILE__);
 
@@ -780,11 +864,11 @@ int main( int argc, char *argv[] ) {
     /*
      * The Registry for marelab plugins
      */
-    pluginRegistry = new PluginRegistry(&marlabConfig);
-    // Scans the plugins dir and adds founded plugs to the registry
+    pluginRegistry = new PluginRegistry(&nucleusConfig);
+    // Scans the plugins dir and adds founded plugs to the plugin registry
     pluginRegistry->ScanForPlugins();
 
-    // Adding Plugin Registry for Saving Logic->Adapter bindings
+    // Adding Plugin Registry for Saving Logic->Adapter bindings to the config registry
     configRegistry.addObj(pluginRegistry);
 
     /*

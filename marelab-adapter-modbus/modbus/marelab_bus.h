@@ -31,7 +31,7 @@
 #include "modbus.h"
 #include "MBD.h"
 
-#include "../json/json.h"
+#include "../globals/json/json.h"
 #include "../IJsonSerializable.h"
 //#include "../marelab/CJsonSerializer.h"
 //#include "../marelab/ConfigRegister.h"

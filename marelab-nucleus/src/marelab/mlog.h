@@ -91,7 +91,9 @@ public:
 
 
 		if (logfile){
-			syslog( LOG_INFO, message.c_str() );
+
+			syslog( LOG_INFO, "%s",message.c_str() );
+
 		}
 
 		if (logconsole){

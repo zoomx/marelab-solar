@@ -28,7 +28,7 @@
 #include <iostream>
 #include <dlfcn.h>
 #include <cstring>
-#include "ConfigMarelab.h"
+#include "ConfigNucleus.h"
 #include "ConfigRegister.h"
 #include "mlog.h"
 
@@ -38,34 +38,37 @@ using namespace std;
 
 
 
-PluginRegistry::PluginRegistry(ConfigMarelab *configMarelab) {
+PluginRegistry::PluginRegistry(ConfigNucleus *configMarelab) {
 	this->configMarelab = configMarelab;
 }
 
 
 bool PluginRegistry::isFilePlugin(string filename)
 {
-    void* pluginHandle = dlopen(filename.c_str(), RTLD_LAZY);
+	cout << "TRY TO LOAD PLUGIN: " << filename << endl;
+	//void* pluginHandle = dlopen(filename.c_str(), RTLD_LAZY);
+    void* pluginHandle = dlopen(filename.c_str(), RTLD_NOW|RTLD_GLOBAL);
     if (!pluginHandle) {
-    //	cout << "PLUGIN Loader: File ("<< filename << ") is no Plugin :" << dlerror() << '\n';
+       cout << "PLUGIN Loader: File ("<< filename << ") is no Plugin :" << dlerror() << '\n';
        return false;
     }
 
     // load the symbols
-    create_t* create_plugin = (create_t*) dlsym(pluginHandle, "create");
+    //create_t* create_plugin = (create_t*)
+    dlsym(pluginHandle, "create");
     const char* dlsym_error = dlerror();
     if (dlsym_error) {
     	cout << "PLUGIN Loader: Cannot load symbol create: " << dlsym_error << '\n';
         return 1;
     }
 
-   destroy_t* destroy_plugin = (destroy_t*) dlsym(pluginHandle, "destroy");
+   // destroy_t* destroy_plugin = (destroy_t*)
+   dlsym(pluginHandle, "destroy");
    dlsym_error = dlerror();
    if (dlsym_error) {
 	   cout << "PLUGIN Loader: Cannot load symbol destroy: " << dlsym_error << '\n';
        return 1;
    }
-
 
 
    return true;
@@ -82,7 +85,7 @@ void PluginRegistry::ClearRegistry(){
 	// Lets remove all entrys in the list
 	// Destroy the object & clear the handle
 	PluginObject *pluginobj;
-	for (int i=0; i<pluginList.size(); i++) {
+	for (unsigned int i=0; i<pluginList.size(); i++) {
 	    pluginobj =  pluginList[i];
 
 	    pluginobj->plugin_destroyFunc(pluginobj->plugin);
@@ -90,7 +93,7 @@ void PluginRegistry::ClearRegistry(){
 	}
 	pluginList.clear();
 
-	for (int i=0; i<adapterList.size(); i++) {
+	for (unsigned int i=0; i<adapterList.size(); i++) {
 		pluginobj =  adapterList[i];
 		pluginobj->plugin_destroyFunc(pluginobj->plugin);
 		dlclose(pluginobj->pluginHandle);
@@ -111,10 +114,10 @@ void PluginRegistry::PluginsAddToConfig(ConfigRegister *configRegistry){
 
 int PluginRegistry::loadPluging(string filename){
 		string typeofplug;
-
+        //cout << "TRY TO LOAD PLUGIN: " << filename << endl;
 	    void* pluginhandle = dlopen(filename.c_str(), RTLD_LAZY);
 	    if (!pluginhandle) {
-	       cout << "PLUGIN Loader: File ("<< filename << ") is no Plugin :" << dlerror() << '\n';
+	       //cout << "PLUGIN Loader: File ("<< filename << ") is no Plugin :" << dlerror() << '\n';
 	       return false;
 	    }
 
@@ -133,6 +136,7 @@ int PluginRegistry::loadPluging(string filename){
 	       return 1;
 	   }
 
+
 	   // create an instance of the class
 	   PluginObject *pluginobj = new PluginObject;
 	   pluginobj->plugin_createFunc = create_plugin;
@@ -141,20 +145,23 @@ int PluginRegistry::loadPluging(string filename){
 	   pluginobj->plugin = create_plugin();
 	   pluginobj->typeOfPlugin = pluginobj->plugin->getTypeOfPlugin();
 
-
 	   // use the class
+	   //pluginobj->plugin->work(NULL,NULL);
 	   string name = pluginobj->plugin->getName();
 	   MLOG::log("Plugin: loaded pugin ["+name +"]",__LINE__,__FILE__ );
 	   //pluginobj->plugin->SetLogger(&MLOG);
 	   typeofplug = pluginobj->plugin->getTypeOfPlugin();
 	   // Adding to plugin list
 	   if (strcmp(typeofplug.c_str(),"LOGIC")==0){
+		   cout << "LOGIC PLUGIN ADDED :" << pluginobj->plugin->getName() << '\n';
 		   pluginList.push_back(pluginobj);
 	   }
 	   // Adding to adapterlist
 	   if (strcmp(typeofplug.c_str(),"ADAPTER")==0){
-	   		   adapterList.push_back(pluginobj);
+		   cout << "Adapter PLUGIN ADDED :" << pluginobj->plugin->getName() << '\n';
+		   adapterList.push_back(pluginobj);
 	   }
+	   return true;
 }
 
 /*
@@ -164,8 +171,6 @@ int PluginRegistry::loadPluging(string filename){
 int PluginRegistry::ScanForPlugins()
 {
 	string dir = configMarelab->getCfPlugindir();
-	//string dir = "/mnt/arm-marelab-dev/marelab-deepblue/marelab-drivers-led/marelab-drivers/";
-	//vector<string> &files;
 
 	DIR *dp;
 	struct dirent *dirp;
@@ -177,21 +182,47 @@ int PluginRegistry::ScanForPlugins()
 
 	while ((dirp = readdir(dp)) != NULL) {
 		string filename = dirp->d_name;
+		//cout<< "Scan: " << filename << endl;
 		if (isFilePlugin (dir+filename))
 		{
+
 			loadPluging(dir+filename);
 		}
 	}
 	closedir(dp);
+
+	// Now all plugin are loaded plugin Objects are created
+	// We have to set the references between plugin Objects
+	// logicPlugin -> adapterPlugin
+	/*PluginObject *pluginobj;
+	for (unsigned int i=0; i < pluginList.size(); i++) {
+			pluginobj =  pluginList[i];
+			pluginobj->adapter = getAdapterObject(pluginobj->)
+			if (pluginobj->plugin->getName()== name)
+				return pluginobj;
+	}*/
 	return 0;
+}
+
+Plugin* getAdapterObject(string adapterName){
+	/*PluginObject *pluginobj;
+	for (unsigned int i=0; i < adapterList.size(); i++) {
+				pluginobj =  adapterList[i];
+				if (pluginobj->plugin->getName()== name)
+					return pluginobj;
+		}
+	*/
+	return NULL;
 }
 
 PluginObject* PluginRegistry::GetPluginWithName(string name){
 	PluginObject *pluginobj;
 	for (unsigned int i=0; i < pluginList.size(); i++) {
 		pluginobj =  pluginList[i];
-		if (pluginobj->plugin->getName()== name)
+		if (pluginobj->plugin->getName()== name){
+			cout << "ret name plugin:" << pluginobj->plugin->getName() << endl;
 			return pluginobj;
+		}
 	}
 	return NULL;
 }
@@ -200,8 +231,12 @@ PluginObject* PluginRegistry::GetAdapterWithName(string name){
 	PluginObject *pluginobj;
 	for (unsigned int i=0; i < adapterList.size(); i++) {
 		pluginobj =  adapterList[i];
-		if (pluginobj->plugin->getName()== name)
+
+		if (pluginobj->plugin->getName()== name){
+			//cout << "ret nameAdapter:" << pluginobj->plugin->getName() << endl;
 			return pluginobj;
+		}
+
 	}
 	return NULL;
 }
@@ -233,6 +268,8 @@ string PluginRegistry::JSONgetPluginFileNames(){
 void PluginRegistry::Serialize( Json::Value& root ){
 	PluginObject *pluginobj;
 	Json::Value pluginItem;
+
+	// SAVE ALL LOGIC CONFIGS
 	for (unsigned int i=0; i < pluginList.size(); i++) {
 		pluginobj =  pluginList[i];
 		pluginItem.clear();
@@ -243,8 +280,19 @@ void PluginRegistry::Serialize( Json::Value& root ){
 			pluginItem.clear();
 			// Saving Plugin delivered var objects
 			pluginobj->Serialize(pluginItem);
-			cout << "PLUGIN-NAME SAVED: " << pluginobj->plugin->getName() << endl;
+			cout << "PLUGIN-LOGIC SAVED: " << pluginobj->plugin->getName() << endl;
 			root[pluginobj->plugin->getName()].append(pluginItem);
+		}
+	}
+
+	// SAVE ALL ADAPTER CONFIGS
+	for (unsigned int i=0; i < adapterList.size(); i++) {
+		pluginobj =  adapterList[i];
+		pluginItem.clear();
+		if (pluginobj->plugin->getTypeOfPlugin()== "ADAPTER"){
+				cout << "PLUGIN-ADAPTER SAVED: " << pluginobj->plugin->getName() << endl;
+				pluginobj->Serialize(pluginItem);
+				root[pluginobj->plugin->getName()]  = pluginItem;
 		}
 	}
 }
@@ -253,21 +301,28 @@ void PluginRegistry::Serialize( Json::Value& root ){
  * RESTORE
  */
 void PluginRegistry::Deserialize( Json::Value& root){
-	PluginObject* LogicPlugin;
-	PluginObject* AdapterPlugin;
+	PluginObject* LogicPlugin = NULL;
+	PluginObject* AdapterPlugin = NULL;
 	//cout << root["LOGIC_ADAPTER_PLUGINS_BINDING"].toStyledString()<<endl;;
 	// Restore the Logic->Adapter Plugin bindings from config file
 	for (unsigned int i=0; i < root["LOGIC_ADAPTER_PLUGINS_BINDING"].size(); i++) {
-		cout << root["LOGIC_ADAPTER_PLUGINS_BINDING"][i]["AdapterPluginName"].asString()<<endl;
-		LogicPlugin = GetPluginWithName(root["LOGIC_ADAPTER_PLUGINS_BINDING"][i]["LogicPluginName"].asString());
+		cout << "Deserialize: " << root["LOGIC_ADAPTER_PLUGINS_BINDING"][i]["AdapterPluginName"].asString()<<endl;
+		LogicPlugin   = GetPluginWithName(root["LOGIC_ADAPTER_PLUGINS_BINDING"][i]["LogicPluginName"].asString());
 		AdapterPlugin = GetAdapterWithName(root["LOGIC_ADAPTER_PLUGINS_BINDING"][i]["AdapterPluginName"].asString());
+		if (AdapterPlugin != NULL){
+			cout << AdapterPlugin->plugin->getName() << endl;
+			//AdapterPlugin->plugin->work(NULL,NULL,root);
+			AdapterPlugin->plugin->Deserialize(root);
+		}
+		else
+			cout << "ERROR NO ADAPTER PLUGIN ISNT THERE" << endl;
 		LogicPlugin->adapter = AdapterPlugin->plugin;
 	}
 	// Restore Plugin Parameters from Config
 	PluginObject *pluginobj;
 	for (unsigned int i=0; i < pluginList.size(); i++) {
 		pluginobj =  pluginList[i];
-		cout << "lade:" << pluginobj->plugin->getName() << endl;
+		cout << "PluginRegistry pluginList Deserilize:" << pluginobj->plugin->getName() << endl;
 		pluginobj->Deserialize( root );
 	}
 }
@@ -287,10 +342,12 @@ void PluginRegistry::SerializeAjax( Json::Value& root ){
 			typeplugin = pluginobj->plugin->getTypeOfPlugin();
 			// Only Logic Plugins get listed
 			if (strcmp(typeplugin.c_str(),"LOGIC")==0){
-				obj_value["PLUGINNAME"] = pluginobj->plugin->getName();
+				cout <<  pluginobj->plugin->getName() << endl;
+				obj_value["PLUGINNAME"]    = pluginobj->plugin->getName();
 				obj_value["PLUGINVERSION"] = pluginobj->plugin->getVersion();
+				cout <<  pluginobj->plugin->getVersion()<< endl;
 				//pluginobj->plugin->hardwareToUse();
-				obj_value["PLUGINHARDWARE"] = pluginobj->plugin->hardwareToUse();
+				obj_value["PLUGINHARDWARE"]  = pluginobj->plugin->hardwareToUse();
 				obj_value["SELECTEDADAPTER"] = pluginobj->adapter->getName();
 				root["PARAMETER"].append(obj_value);
 				obj_value.clear();

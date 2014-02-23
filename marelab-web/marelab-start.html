@@ -444,9 +444,27 @@
 		}
 		//para='test","PORT":"'+sC.PORT+'","BAUD":"'+sC.BAUD+'","DATABITS":"'+sC.DATABITS+'","PARITY":"'+sC.PARITY+'","STOPBITS":"'+sC.STOPBITS;
 		//alert (JSON.stringify(PluginLogicObjectList));
-		jsonRET = getMarelabData('COMMAND=mcu_NUCLEUS_CONFIGSAVE&PARAMETER='+JSON.stringify(PluginLogicObjectList));
-		
+		jsonRET = getMarelabData('COMMAND=mcu_NUCLEUS_CONFIGSAVE&PARAMETER='+JSON.stringify(PluginLogicObjectList));	
 	}
+	
+	// Get the HardwareAdapterConfig Dialog for a Logic Plugin
+	function GetAdapterPluginConfigHTML(logicPluginName){
+		// Removing exosting Adapter Config Html Code to the Config Adapter Dialog
+		$("#AdapterConfigContent").empty();
+		//'COMMAND=READ_CONFIG&PARAMETER="PLUGIN":"LedDimmer"'
+		jsonRET = getMarelabData('COMMAND=ADAPTER_GET_CONFIG_HTML&PARAMETER="PLUGIN":"'+logicPluginName+ '"');
+		// Adding the returned Adapter Config Html Code to the Config Adapter Dialog
+		$("#AdapterConfigContent").append(jsonRET.HTML);
+		$('#AdapterConfig' ).dialog();
+  	}
+	
+	// Get the HardwareAdapterConfig as insert for table
+	function GetAdapterPluginConfigHtmlTable(logicPluginName){
+		//'COMMAND=READ_CONFIG&PARAMETER="PLUGIN":"LedDimmer"'
+		jsonRET = getMarelabData('COMMAND=ADAPTER_GET_CONFIG_HTML&PARAMETER="PLUGIN":"'+logicPluginName+ '"');
+		return jsonRET.HTML;
+	
+  	}
 	
 	function ReplaceAdapter(adapterName){
 		alert(adapterName);
@@ -535,7 +553,7 @@
 			pluginTable = pluginTable + '    <td width="87" rowspan="2" align="center" bgcolor="#003366"><input type="image" onclick="led_SAVECURVE();" src="img/'+plugins.PARAMETER[i].PLUGINNAME+'.png" width="32" height="32" alt="save config" /></td>';
 			pluginTable = pluginTable + '    <td bgcolor="#006699">'+plugins.PARAMETER[i].PLUGINNAME+'<br />';
 			pluginTable = pluginTable + 'Version: '+plugins.PARAMETER[i].PLUGINVERSION+'</td>';
-			pluginTable = pluginTable + '    <td align="right" bgcolor="#006699"><img src="img/setup.png" alt="sd" width="32" height="32" /></td>';
+			pluginTable = pluginTable + '    <td align="right" bgcolor="#006699"><input type="image" onclick="GetAdapterPluginConfigHTML(\''+plugins.PARAMETER[i].PLUGINNAME+'\');" src="img/setup.png" width="32" height="32" alt="config_hardwareAdapter" /></td>';
 			pluginTable = pluginTable + '    <td align="right" bgcolor="#006699"><input type="image" onclick="SaveLogicAdapterPluginConfig();" src="img/savef.png" width="32" height="32" alt="save config" /></td>';
 			pluginTable = pluginTable + '  </tr>';
 			pluginTable = pluginTable + '  <tr>';
@@ -561,6 +579,13 @@
 			pluginTable = pluginTable + '    <td align="left" bgcolor="#006699">Adapter: <span id="'+logic2adapterName+'">'+AdapterSelect+'</span></td>';
 			pluginTable = pluginTable + '    <td width="30" align="center" bgcolor="#006699"><input type="image" onclick="AdapterDialog('+i+');" src="img/hardware.png" width="32" height="32" alt="sd" /></td>';
 			pluginTable = pluginTable + '    <td width="34" align="center" bgcolor="#006699"><img src="img/onoff.png" width="32" height="32" alt="as" /></td>';
+			
+			
+			//<!-- ADDING HARDWARE/CHIPS CONFIG 
+			//pluginTable = pluginTable + '    <td align="right" bgcolor="#006699">'+GetAdapterPluginConfigHTML(plugins.PARAMETER[i].PLUGINNAME)+'</td>';
+			
+			//-->
+			
 			pluginTable = pluginTable + '   </tr>';
 			pluginTable = pluginTable + ' </table>';
 			pluginTable = pluginTable + '  </td>';
@@ -573,6 +598,32 @@
 		pluginTable = pluginTable + '</table>';
 		
 		$("#pluginadaperlist").html(pluginTable);
+		
+	}
+	
+	//function HtmlInjection(id_target,htmlinjection)
+	function HtmlInjection(ID_SELECT,textinsert)
+	{
+		// Get the option selected 
+		var selectName = $('#CHIPSET_SELECT').find(":selected").text();
+		
+		$("#"+ID_SELECT).html("<td>"+selectName+"</td>");
+	}
+	
+	
+	function ConnectorDialog(titel,content){
+		//var plugins = GET_PLUGININFO();
+		var htmlout = content;
+		var AdapterName="";
+		//adapterCount = plugins.PARAMETER[pluginhardware].PLUGINHARDWARE.length;
+		//for (i=0; i<adapterCount;i++)
+		//{
+		//	AdapterName = plugins.PARAMETER[pluginhardware].PLUGINHARDWARE[i].ADAPTER_NAME
+		//	htmlout = htmlout + "<input type='button' name='SetAdapter' value='Select' onclick='ReplaceAdapter("+AdapterName+");'> "+ plugins.PARAMETER[pluginhardware].PLUGINHARDWARE[i].ADAPTER_NAME + " version:" +plugins.PARAMETER[pluginhardware].PLUGINHARDWARE[i].ADAPTER_VERSION+"<br>";
+		//}
+		
+		$('p#ConnectorConfigContent').html(htmlout);
+		$('#ConnectorConfig' ).dialog();
 		
 	}
 	
@@ -607,10 +658,20 @@
 				<!-- ************************************** -->
 				<div id="PLUGIN_MENU"></div>
 				<div id="MENU_FOR_PLUGINS"></div>
-				<!-- <p class="PluginButton">setup</p> -->
 				<p class="PluginButton" onClick="SetupMenu();">Setup</p>
-
+				
+				<!-- ************************************** -->
+				<!-- OS INFO LINUX                          -->
+				<!-- ************************************** -->
+				<p class="PluginButton" onClick="">OS Info</p>
+				
+				<!-- ************************************** -->
+				<!-- FILL PLUGIN MENUS -->
+				<!-- ************************************** -->			
 			</div>
+			
+	
+			
 			<div id="tabs-1">
 				<div id="RECHTS">
 					<!-- **************   SETUP CONTENT ********************* -->
@@ -732,6 +793,23 @@
 	<div id="AdapterDialog" style="display: none" title="Adapter Selction">
 		<p id="AdapterSelection"></p>
 	</div>
+	
+	<!-- Dialog for the Adapter Configuration -->
+	<div id="AdapterConfig" style="display: none" title="Adapter Configuration">
+		<p id="AdapterConfigContent"></p>
+	</div>
+	
+	
+	<!-- 
+		Dialog for the Connector Configuration 
+		This is a universal Dialog for all logic 
+		Plugins. 
+	-->
+	
+	<div id="ConnectorConfig" style="display: none" title="Connector Configuration">
+		<p id="ConnectorConfigContent"></p>
+	</div>
+	
 
 </body>
 </html>

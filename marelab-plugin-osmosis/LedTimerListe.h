@@ -30,8 +30,8 @@
 #include <vector>
 
 #include "json/json.h"
-#include "/home/marelab/git/marelab-solar/marelab-nucleus/src/marelab/IJsonSerializable.h"
-#include "/home/marelab/git/marelab-solar/marelab-nucleus/src/marelab/CJsonSerializer.h"
+#include "../marelab-nucleus/src/marelab/IJsonSerializable.h"
+#include "../marelab-nucleus/src/marelab/CJsonSerializer.h"
 #include "LedString.h"
 
 #define TIMERSTORECOUNT 48

@@ -70,7 +70,7 @@ void LedString::setLdTimeArray(int no, int value)
 
 void LedString::printLedString()
 {
-	printf("\nColor: %s LedString: %i %s I2C: %i Time/Value:\n",ChartColor,LD_number,LD_name.c_str(),LD_i2c_channel);
+	printf("\nColor: %s LedString: %i %s I2C: %i Time/Value:\n",ChartColor.c_str(),LD_number,LD_name.c_str(),LD_i2c_channel);
 	for (int i=0; i< DAY_SENSE_POINT;i++)
 		printf("%i ",LD_TimeArray[i]);
 

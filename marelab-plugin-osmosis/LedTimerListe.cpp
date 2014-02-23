@@ -140,8 +140,8 @@ void LedTimerListe::AddChangeLed(string led_number, string led_channel, string l
 int LedTimerListe::DelLed(int led_number)
 {
 
-	LedString *ledstring;
-	ledstring = &LD_StringListe.operator [](led_number);
+	//LedString *ledstring;
+	//ledstring = &LD_StringListe.operator [](led_number);
 	LD_StringListe.erase(LD_StringListe.begin()+led_number);
 	lastPower.erase(lastPower.begin()+led_number);
 	//delete ledstring;
@@ -238,11 +238,13 @@ void LedTimerListe::printLedListe()
 void LedTimerListe::Deserialize( Json::Value& root )
 {
 	string version =  root.get("version", "").asString();
-
+	cout << "VERSION=" << version << endl;
+	Json::Value LedDimmer(Json::objectValue);
 	// Delete of the list
 	this->Clear();
-
-	int countLedLeisten = root.get("LedListe", "").size();
+	//LedDimmer = root.get("LedDimmer", "");
+	cout << "LEDDIMMER=" << root.toStyledString() << endl;
+	int countLedLeisten = LedDimmer["LedListe"].size();
 	//string ledchannelcout = i2str(countLedLeisten);
 	//MLOG::log("PLUGIN LED: Count of Dim Channels = "+ledchannelcout,__LINE__,__FILE__);
 	cout << "OSMOSIS LED: Count of Dim Channels =" << countLedLeisten << endl;
@@ -250,14 +252,14 @@ void LedTimerListe::Deserialize( Json::Value& root )
 	{
 		LedString ledstring;
 		//cout << root.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString() << "\n";
-		ledstring.setLdName(root.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString());
-		ledstring.setLdI2cChannel(root.get("LedListe", "")[i].get("LedString","").get("LDI2CCHANNEL","").asInt());
-		ledstring.setLdNumber(root.get("LedListe", "")[i].get("LedString","").get("LDNUMBER","").asInt());
+		ledstring.setLdName(LedDimmer.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString());
+		ledstring.setLdI2cChannel(LedDimmer.get("LedListe", "")[i].get("LedString","").get("LDI2CCHANNEL","").asInt());
+		ledstring.setLdNumber(LedDimmer.get("LedListe", "")[i].get("LedString","").get("LDNUMBER","").asInt());
 		for (int ii=0;ii<TIMERSTORECOUNT;ii++)
 		{
-			ledstring.setLdTimeArray( ii,root.get("LedListe", "")[i].get("LedString","").get("LDTIMEARRAY","")[ii].asInt());
+			ledstring.setLdTimeArray( ii,LedDimmer.get("LedListe", "")[i].get("LedString","").get("LDTIMEARRAY","")[ii].asInt());
 		}
-		ledstring.setChartColor(root.get("LedListe", "")[i].get("LedString","").get("ChartColor","").asString());
+		ledstring.setChartColor(LedDimmer.get("LedListe", "")[i].get("LedString","").get("ChartColor","").asString());
 		this->AddLed(ledstring);
 	}
 /*

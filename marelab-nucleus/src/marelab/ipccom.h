@@ -26,7 +26,7 @@
 #include <cstring>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include "ConfigMarelab.h"
+#include "ConfigNucleus.h"
 
 #ifndef IPCCOM_H_
 #define IPCCOM_H_
@@ -42,12 +42,12 @@ private:
 	int socketid;
 	int socketret;
 	char sockbuf[TRANSFER_BUFFER];
-	ConfigMarelab *configMarelab;
+	ConfigNucleus *configMarelab;
 	string rcvString;
 
 
 public:
-	ipccom(ConfigMarelab *configMarelab);
+	ipccom(ConfigNucleus *configMarelab);
 	void openServer();
 	void openClient();
 

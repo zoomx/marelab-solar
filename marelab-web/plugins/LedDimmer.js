@@ -197,7 +197,6 @@ function Convert2Int(arr) {
 }
 
 function Graph(id, arrayLeds, keyLeds) {
-	//line = new RGraph.Line('cvs', [4,5,8,7,6,4,3,5], [7,1,6,9,4,6,5,2]);
 	console.log("Created Graph");
 	line = new RGraph.Line(id, arrayLeds);
 	line.Set('chart.colors',CHARTCOLOR);
@@ -205,22 +204,22 @@ function Graph(id, arrayLeds, keyLeds) {
 	line.Set('chart.background.grid.autofit', true);
 	line.Set('chart.background.grid.autofit.numhlines', 10);
 	line.Set('chart.background.grid.autofit.numvlines', 47);
-	line.Set('chart.hmargin', 10);
+	line.Set('chart.hmargin', 0);
 	line.Set('chart.shadow', true);
 	line.Set('chart.adjustable', true);
 	line.Set('chart.title', 'Percent over 24 hour period');
 	line.Set('chart.title.vpos', 0.5);
-	line.Set('chart.spline', true);
+	//line.Set('chart.spline', true);
 	line.Set('chart.tickmarks', 'circle');
 	line.Set('chart.background.grid.color', 'rgba(57,82,99,1)');
 	line.Set('chart.title.color', 'rgba(57,82,99,1)');
 	line.Set('chart.title.yaxis.color', 'rgba(57,82,99,1)');
 	line.Set('chart.axis.color', 'rgba(57,82,99,1)');
 	line.Set('chart.text.color', 'rgba(57,82,99,1)');
-	line.Set('chart.numxticks', 23.5);
-	line.Set('chart.labels', [ '00', '01', '02', '03', '04', '05', '06', '07',
-			'08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18',
-			'19', '20', '21', '22', '23' ]);
+	line.Set('chart.numxticks', 47);
+	line.Set('chart.labels', [ '00','', '1','', '2','', '3','', '4', '', '5', '', '6','', '7','',
+			'8','', '9','', '10','', '11','', '12','', '13','', '14','', '15','', '16','', '17','', '18','',
+			'19','', '20','', '21','', '22','', '23','']);
 	line.Set('chart.ymin', 0);
 	line.Set('chart.ymax', 100);
 	line.Draw();
@@ -526,6 +525,90 @@ function led_SAVECURVE() {
 	}
 }
 
+// start Connector config dialog
+function CONNECTOR(){
+	para = '"PLUGINNAME":"LedDimmer"';
+	var LogicConnectors;
+	var htmlContent ="<p>";
+	LogicConnectors = getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para).CONNECTOR;
+	//var myJSONText1 = JSON.stringify(getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para));
+
+	// generate the logic connector list
+	titeltxt = LogicConnectors.PLUGIN_NAME + " Version:" + LogicConnectors.PLUGIN_VERSION;
+	htmlContent = htmlContent + "<div id='titel_setup_content'>";
+	htmlContent = htmlContent + "<div id='TOOLBAR-TITEL'>"+titeltxt+"</div>";
+	htmlContent = htmlContent + "<div id='TOOLBAR'>";
+	htmlContent = htmlContent + "	<input type='image' onclick='led_SAVECURVE();' src='img/savef.png' width='32' height='32' alt='save' />";
+	htmlContent = htmlContent + "</div>";
+	htmlContent = htmlContent + "</div>";
+	
+	htmlContent = htmlContent + "<div id='titel_setup_content'>";
+	htmlContent = htmlContent + "<div id='TOOLBAR-TITEL'>";
+	htmlContent = htmlContent + "<table border='1' width='100%' cellpadding='0' cellspacing='3'>";
+	htmlContent = htmlContent + "<tr>";
+	htmlContent = htmlContent + "<td>Connector</td>";
+	htmlContent = htmlContent + "<td>Type</td>";
+	htmlContent = htmlContent + "<td>Dir</td>";
+	htmlContent = htmlContent + "<td>Adapter Port</td>";
+	htmlContent = htmlContent + "<td>Type</td>";
+	htmlContent = htmlContent + "</tr>";
+	var Connectors =  LogicConnectors.CONNECTORS;
+	for (var Connector in Connectors) {
+		htmlContent = htmlContent + "<tr>";
+		htmlContent = htmlContent + "<td>"+Connectors[Connector].DESCRIPTION+"</td>";
+		// Hardware Type IO,DA,AD
+		if (Connectors[Connector].HWTYPE=="0")									// IO img
+			htmlContent = htmlContent + "<td><img src='img/IO.png' alt='sd' width='48' height='16'/></td>";
+		if (Connectors[Connector].HWTYPE=="1")									// DA img
+			htmlContent = htmlContent + "<td><img src='img/DA.png' alt='sd' width='48' height='16'/></td>";
+		if (Connectors[Connector].HWTYPE == "2" ) 								// AD img
+			htmlContent = htmlContent + "<td><img src='img/AD.png' alt='sd' width='16' height='16'/></td>";
+		// Dir IN,OUT,BI
+		if (Connectors[Connector].DIR=="1")										  // Output img
+			htmlContent = htmlContent + "<td><img src='img/dout.png' alt='sd' width='48' height='16'/></td>";
+		if (Connectors[Connector].DIR=="0")										  // Input img
+			htmlContent = htmlContent + "<td><img src='img/din.png' alt='sd' width='48' height='16'/></td>";
+		if (Connectors[Connector].DIR != "0" && Connectors[Connector].DIR != "1") // Error img
+			htmlContent = htmlContent + "<td><img src='img/del.png' alt='sd' width='16' height='16'/></td>";
+		
+		htmlContent = htmlContent + "<td>"+"<input type='image' onclick='CONNECTOR();' src='img/lightbulb.png' alt='sd' width='16' height='16'/>"+"</td>";
+		htmlContent = htmlContent + "<td></td>";
+		htmlContent = htmlContent + "</tr>";
+	}
+	htmlContent = htmlContent + "</table>";
+	htmlContent = htmlContent + "</div>";
+	htmlContent = htmlContent + "</div>";
+	
+
+
+
+	
+	
+	//var myJSONText1 = JSON.stringify(LogicConnectors);
+	//alert (myJSONText1);
+	
+	para = '"PLUGINNAME":"I2C Adapter"';
+	var myJSONText2 = JSON.stringify(getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para));
+	alert (myJSONText2);
+	ConnectorDialog(titeltxt,htmlContent); 
+}
+
+// MOVES the LED Light Down
+function led_MOVE_DOWN(){
+	para = '"LEDIMMER_DIR":"DOWN"';
+	getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+}
+// STOPS THE LED LIGHT MOVE
+function led_MOVE_STOP(){
+	para = '"LEDIMMER_DIR":"STOP"';
+	getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+	
+}
+// MOVES THE LED LIGHT UP
+function led_MOVE_UP(){
+	para = '"LEDIMMER_DIR":"UP"';
+	getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+}
 
 function GenerateLedDropDown(){
 	var html;

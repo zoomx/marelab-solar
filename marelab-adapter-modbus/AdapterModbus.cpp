@@ -15,13 +15,11 @@ using namespace std;
 #include <time.h>
 #include "Plugin.hpp"
 #include "plugin-adapterconfig.h"
+#include "LConnection.h";
+#include "json/json.h"
 
 
 class AdapterModbus : public Plugin{
-protected:
-
-
-
 public:
 
     virtual string getName(){
@@ -40,11 +38,19 @@ public:
     }
 
 
-  virtual void work(tm calltime){
-    	time_t 	tim;				// SystemTime
-    	tim=time(NULL);
+  virtual void work(tm *calltime, Plugin *adapter,Json::Value &jsonLedDimmer){
+	    //cout << "WORK FROM MODBUS ADPTER"<< endl;
+    	//time_t 	tim;				// SystemTime
+    	//tim=time(NULL);
   }
 
+  void Command( Plugin *adapter,Json::Value& root ){
+
+  }
+
+  string getConfigHTML(string logic){
+  	  return "";
+  }
 
   // Functions that triggers the hardware direkt
 
@@ -92,12 +98,17 @@ public:
   virtual void SetConfigAsJSON( Json::Value& para){
   }
 
+  /* Connetor Functions */
+  void ConDebugConnectorList(){
+	 cout << "ConDebugConnectorList AdapterModbus" << endl;
+  }
+
 };
 
 
 // the class factories
 extern "C" AdapterModbus* create() {
-    return new AdapterModbus;
+    return new AdapterModbus();
 }
 
 extern "C" void destroy(AdapterModbus* p) {

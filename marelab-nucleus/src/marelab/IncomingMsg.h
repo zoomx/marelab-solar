@@ -29,10 +29,8 @@
 #include <cstdlib>
 #include <vector>
 
-#include "../json/json.h"
-#include "IJsonSerializable.h"
-//#include "CJsonSerializer.h"
-
+#include "../globals/json/json.h"
+#include "../globals/IJsonSerializable.h"
 
 using namespace std;
 

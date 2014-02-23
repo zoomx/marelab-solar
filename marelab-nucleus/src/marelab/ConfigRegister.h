@@ -38,8 +38,8 @@
 #include <cstdlib>   // Required by malloc()
 #include <vector>
 
-#include "../json/json.h"
-#include "IJsonSerializable.h"
+#include "../globals/json/json.h"
+#include "../globals/IJsonSerializable.h"
 #include "../marelab/mlog.h"
 
 #define CONFIGFILE "marelab_cfg/marelab.cfg"
@@ -48,12 +48,12 @@ using namespace std;
 
 class ConfigRegister {
 protected:
-	vector<IJsonSerializable*> registry;
+	vector<IJsonSerializable*> configRegistry;
 	string styled_output;
 public:
 
 	void addObj(IJsonSerializable* configobj) {
-		registry.push_back(configobj);
+		configRegistry.push_back(configobj);
 	}
 	;
 
@@ -68,8 +68,8 @@ public:
     	std::ofstream out(CONFIGFILE);
     	Json::Value serializeRoot;
     	cout << "TRY TO WRITE CONFIG :" << endl;
-    	for (unsigned int i=0; i<registry.size(); i++) {
-    		configObj =  registry[i];
+    	for (unsigned int i=0; i<configRegistry.size(); i++) {
+    		configObj =  configRegistry[i];
     		configObj->Serialize(serializeRoot);
     	}
 
@@ -99,8 +99,8 @@ public:
     	    	  input += line + "\n";
 
     	// Deserialize File to Obj
-    	for (unsigned int i=0; i<registry.size(); i++) {
-    		configObj =  registry[i];
+    	for (unsigned int i=0; i<configRegistry.size(); i++) {
+    		configObj =  configRegistry[i];
 
     	    if (ConfigRegister::Deserialize(configObj,input)){
     	    	MLOG::log("Config: parse successfull",__LINE__,__FILE__);
@@ -175,7 +175,7 @@ public:
 		if (pObj == NULL)
 			return false;
 
-		Json::Value deserializeRoot;
+		Json::Value  deserializeRoot;
 		Json::Reader reader;
 
 		if (!reader.parse(input, deserializeRoot))

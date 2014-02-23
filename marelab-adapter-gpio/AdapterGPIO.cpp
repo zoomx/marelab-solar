@@ -30,6 +30,7 @@
 using namespace std;
 #include <string>
 #include <time.h>
+#include "json/json.h"
 #include "Plugin.hpp"
 #include "plugin-adapterconfig.h"
 
@@ -53,13 +54,22 @@ public:
         	return typeofplugin;
     }
 
-  virtual void work(tm calltime){
-    	time_t 	tim;				// SystemTime
-    	tim=time(NULL);
-    	tm *timeNow = localtime(&tim);
+  void work(tm *calltime, Plugin *adapter,Json::Value &jsonLedDimmer){
+	    //cout << "WORK FROM GPIO ADAPTER" << endl;
   }
 
-  virtual Json::Value hardwareToUse(){}
+  void Command( Plugin *adapter,Json::Value& root ){
+
+  }
+
+  string getConfigHTML(string logic){
+  	  return "";
+  }
+
+  virtual Json::Value hardwareToUse(){
+	  Json::Value x;
+	  return x;
+  }
 
   //IO
   virtual void Serialize( Json::Value& root ){}
@@ -101,13 +111,15 @@ public:
   virtual void   setArrayState(string varName,unsigned int* statearray){
   }
 
-
+  void ConDebugConnectorList(){
+	 cout << "ConDebugConnectorList AdapterGPIO" << endl;
+  }
 };
 
 
 // the class factories
 extern "C" Plugin* create() {
-    return new AdapterGPIO;
+    return new AdapterGPIO();
 }
 
 extern "C" void destroy(Plugin* p) {

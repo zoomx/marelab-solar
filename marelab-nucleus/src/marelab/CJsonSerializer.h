@@ -31,8 +31,8 @@
 #include <cstdlib>   // Required by malloc()
 #include <vector>
 
-#include "../json/json.h"
-#include "IJsonSerializable.h"
+#include "../globals/json/json.h"
+#include "../globals/IJsonSerializable.h"
 
 #define TIMERSTORECOUNT 48
 

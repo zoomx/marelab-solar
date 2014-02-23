@@ -22,7 +22,7 @@
 #include "marelab_modbus.h"
 #include "marelab_bus.h"
 
-#include "../json/json.h"
+#include "../globals/json/json.h"
 #include "../IJsonSerializable.h"
 
 //#include "../mlog.h"
