@@ -7,7 +7,9 @@ devices/I2CDEVICE.d: ../devices/I2CDEVICE.cpp ../devices/I2CDEVICE.h \
  /mnt/marelab/marelab-nucleus/src/globals/../globals/json/reader.h \
  /mnt/marelab/marelab-nucleus/src/globals/../globals/json/features.h \
  /mnt/marelab/marelab-nucleus/src/globals/../globals/json/writer.h \
- /mnt/marelab/marelab-nucleus/src/globals/../globals/IJsonSerializable.h
+ /mnt/marelab/marelab-nucleus/src/globals/../globals/IJsonSerializable.h \
+ /mnt/marelab/marelab-nucleus/src/globals/LConnection.h \
+ /mnt/marelab/marelab-nucleus/src/globals/json/json.h
 
 ../devices/I2CDEVICE.h:
 
@@ -28,3 +30,7 @@ devices/I2CDEVICE.d: ../devices/I2CDEVICE.cpp ../devices/I2CDEVICE.h \
 /mnt/marelab/marelab-nucleus/src/globals/../globals/json/writer.h:
 
 /mnt/marelab/marelab-nucleus/src/globals/../globals/IJsonSerializable.h:
+
+/mnt/marelab/marelab-nucleus/src/globals/LConnection.h:
+
+/mnt/marelab/marelab-nucleus/src/globals/json/json.h:

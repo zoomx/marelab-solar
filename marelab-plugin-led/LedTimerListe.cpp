@@ -62,6 +62,7 @@ void LedTimerListe::AddLed(LedString ledstring)
 
 LedTimerListe::~LedTimerListe()
 {
+	cout << "LedTimerListe Destructor..." << endl;
 	/*
 	 int sizeofLedListe  = this->CountLed();
 	for(int i=0; i<sizeofLedListe; i++)
@@ -95,7 +96,7 @@ void LedTimerListe::SaveFile()
 /*
  * Add or Changes a LED Channel
  */
-void LedTimerListe::AddChangeLed(string led_number, string led_channel, string led_name, string led_intensity, string chartcolor)
+void LedTimerListe::AddChangeLed(string led_number, string led_channel, string led_name, string led_intensity, string chartcolor,string uuid)
 {
 	int ledno;
 	LedString *ls;
@@ -115,6 +116,7 @@ void LedTimerListe::AddChangeLed(string led_number, string led_channel, string l
 		ls->setLdName(led_name);
 		ls->setLdI2cChannel(atoi(led_channel.c_str()));
 		ls->setChartColor(chartcolor);
+		ls->setUUID(uuid);
 		this->AddLed(*ls);
 		// LED intensität umsetzen
 		led_intensity = "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]";
@@ -130,6 +132,7 @@ void LedTimerListe::AddChangeLed(string led_number, string led_channel, string l
 		ls->setLdI2cChannel(atoi(led_channel.c_str()));
 		ls->setChartColor(chartcolor);
 		ls->setLdNumber(ledno);
+		ls->setUUID(uuid);
 	}
 
 
@@ -218,13 +221,13 @@ void LedTimerListe::SerializeAjax( Json::Value& root )
 		rowitem.append(LD_StringListe[i].getLdI2cChannel());
 		rowitem.append(ledvalues);
 		rowitem.append(LD_StringListe[i].getChartColor());
+		rowitem.append(LD_StringListe[i].getUUID());
 		zeile["cell"] = rowitem;
-
 		root["LedListe"].append(zeile);
 		ledvalues.clear();
 		rowitem.clear();
 	}
-	// version tag into stream
+	// version tag into LedDimmer Plugin
 	root["version"] = "2.0";
 }
 
@@ -246,6 +249,7 @@ void LedTimerListe::Serialize( Json::Value& root )
 			obj_value["LedString"]["LDTIMEARRAY"].append(LD_StringListe[i].getLdTimeArray()[ii]);
 		}
 		obj_value["LedString"]["CHARTCOLOR"]=  LD_StringListe[i].getChartColor();
+		obj_value["LedString"]["UUID"]=  LD_StringListe[i].getUUID();
 		root["LedListe"].append(obj_value);
 		obj_value.clear();
 		obj_value["LedString"]["LDTIMEARRAY"].clear();
@@ -262,6 +266,7 @@ void LedTimerListe::printLedListe()
 		this->GetLed(i)->printLedString();
 	}
 }
+
 
 void LedTimerListe::Deserialize( Json::Value& root )
 {
@@ -280,6 +285,7 @@ void LedTimerListe::Deserialize( Json::Value& root )
 	{
 		LedString ledstring;
 		ledstring.setLdName(config.get("LedListe", "")[i].get("LedString","").get("LDNAME","").asString());
+		ledstring.setUUID(config.get("LedListe", "")[i].get("LedString","").get("UUID","").asString());
 		ledstring.setLdI2cChannel(config.get("LedListe", "")[i].get("LedString","").get("LDI2CCHANNEL","").asInt());
 		ledstring.setLdNumber(config.get("LedListe", "")[i].get("LedString","").get("LDNUMBER","").asInt());
 		for (int ii=0;ii<TIMERSTORECOUNT;ii++)
@@ -317,6 +323,27 @@ vector<string> LedTimerListe::split(const string& strValue, char separator)
 
     return vecstrResult;
 }
+
+int LedTimerListe::SetLastPowerValue(int led_number,tm *time2Check,int power)
+{
+
+	LedString* ledstring = GetLedArrayNo(led_number);
+
+	int hour_now = time2Check->tm_hour;
+	int min_now  = time2Check->tm_min;
+	int sec_now  = time2Check->tm_sec;
+
+
+	unsigned int index1;
+
+	index1 = ((unsigned int) ((hour_now*3600)+(min_now*60)+sec_now)/1800);
+	//cout << "TimeIndex:" << index1 << endl;
+
+	cout << "Index: "<< index1 <<" Intensity "<<hour_now<<":"<<min_now<<":"<<sec_now<<" "<< ledstring->getLdName() << " New=" << power << "% Old= " << lastPower.operator [](led_number) << "%"<<endl;
+	lastPower.operator [](led_number) = power;
+	return power;
+}
+
 
 /* Gets the % 0-100 of power for a given time */
 int LedTimerListe::GetPowerValue(int led_number,tm *time2Check)

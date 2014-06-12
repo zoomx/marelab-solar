@@ -44,13 +44,17 @@ namespace std {
 ipccom::ipccom(ConfigNucleus *configMarelab) {
 	this->configMarelab = configMarelab;
 }
-
+void ipccom::closeServer(){
+	if (socketid != -1)
+		close(socketid);
+}
 void ipccom::openServer() {
 	 int len;
 	 struct sockaddr_un local;
 
 	 if ((socketid = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
 	 {
+	 // syslog( LOG_ERR, "Socket can't be opened created or opend...");
 	   throw "Socket can't be opened";
 	 }
 	 else
@@ -67,11 +71,11 @@ void ipccom::openServer() {
 		 if (listen(socketid, 5) == -1) {
 			 throw "Socket can't be listed";
 		 }
-		 syslog( LOG_ERR, "Server socket successfully created...");
+		// syslog( LOG_ERR, "Server socket successfully created...");
 
 	 }
 }
-
+/*
 void ipccom::openClient() {
 
 	 int  len;
@@ -92,34 +96,38 @@ void ipccom::openClient() {
 	 }
 }
 
-
+*/
 bool ipccom::recvSock(){
 	int  n;
 	socklen_t t;
 
     t = sizeof(remote);
-    if ((socketret = accept(socketid, (struct sockaddr *)&remote,&t)) == -1) {
+    socketret = accept(socketid, (struct sockaddr *)&remote,&t);
+    if (socketret == -1) {
     	//string error =  strerror(errno);
-    	//cout << error << endl;
+    	syslog( LOG_ERR, "Socket Error nucleus  (ID:%i)",socketid);
+    	//close(socketret);
     	return false;
     }
     else
     {
-    	syslog( LOG_ERR, "Connection accepted...");
+    	//syslog( LOG_ERR, "Connection accepted...");
     	/* Connected lets get something to recv*/
     	memset( sockbuf,0,  TRANSFER_BUFFER);
         n = recv(socketret, sockbuf, TRANSFER_BUFFER, 0);
         if (n <= 0)
         {
            if (n < 0) {
-        	   syslog( LOG_ERR, "Socket recv error...");
-        	   close(socketret);
+        	  // syslog( LOG_ERR, "Socket recv error...");
+        	   syslog( LOG_ERR, "Socket Error2 nucleus  (ID:%i)",socketid);
+        	  // close(socketret);
            }
            return false;
         }
+        syslog( LOG_ERR, "Socket nucleus ok  (ID:%i)",socketid);
+        //close(socketret);
         return true;
     }
-    return false;
 }
 
 bool ipccom::recvSockClient(){
@@ -131,7 +139,7 @@ bool ipccom::recvSockClient(){
     {
       if (n < 0) {
       syslog( LOG_ERR, "Socket recv error...");
-      close(socketid);
+     // close(socketid);
       }
       return false;
     }
@@ -141,25 +149,22 @@ bool ipccom::recvSockClient(){
 string ipccom::getMsg()
 {
 	string msg;
-	msg = "";
+	msg.clear();
 	msg = sockbuf;
 	return msg;
 }
 
-bool ipccom::sendSock(string bytesToSend){
-    if (send(socketid, bytesToSend.c_str(), strlen(bytesToSend.c_str()), 0) == -1)
-    {
-        return false;
-    }
-    return true;
-}
-bool ipccom::sendSockServer(string bytesToSend){
+bool ipccom::send2cgi(string bytesToSend){
     if (send(socketret, bytesToSend.c_str(), strlen(bytesToSend.c_str()), 0) == -1)
     {
+    	string error =  strerror(errno);
+    	syslog( LOG_ERR, "Nucleus sends back answer [%s] ERROR...",error.c_str());
         return false;
     }
+    close(socketret);
     return true;
 }
+
 
 ipccom::~ipccom() {
 	close(socketret);

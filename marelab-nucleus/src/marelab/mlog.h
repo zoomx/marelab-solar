@@ -67,7 +67,7 @@ public:
 	}
 
 	static void log(string message, int iline,string file){
-		bool logfile = true;
+		//bool logfile = true;
 		bool logconsole = true;
 		bool logclient = true;
 
@@ -85,16 +85,15 @@ public:
 		        + i2str(now->tm_min) + ':'
 		        + i2str(now->tm_sec);
 
-
 		line = i2str(iline) + " ";
 
 
 
-		if (logfile){
+		//if (logfile){
 
-			syslog( LOG_INFO, "%s",message.c_str() );
+		//	syslog( LOG_INFO, "%s",message.c_str() );
 
-		}
+		//}
 
 		if (logconsole){
 			cout <<datum<< file << " Line:" << line << message << endl;
@@ -103,7 +102,7 @@ public:
 			loggmsg = loggmsg +datum+ file + " Line:" + line + "\n" +message + "\n";
 			//cout << "LOG:" << message << endl;
 			if (loggmsg.size() > 4096)
-				loggmsg = "";
+				loggmsg.clear();
 		}
 
 	}

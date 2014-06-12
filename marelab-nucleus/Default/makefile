@@ -49,7 +49,7 @@ all: marelab-nucleus
 marelab-nucleus: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "marelab-nucleus" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/mnt/marelab/lua-5.2.1/src -o "marelab-nucleus" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

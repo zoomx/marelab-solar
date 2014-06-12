@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+//#include "marelabconf-pi.h"
 #include "marelabconf.h"
 
 #ifndef IPCCOM_H_
@@ -48,9 +49,10 @@ public:
 	ipccom();
 	void openServer();
 	void openClient();
-
+	void closeServer();
 	bool recvSock();
-	bool recvSockClient();
+	bool recvSockFromNucleus();
+
 	bool sendSock(string bytesToSend);
 	bool sendSockServer(string bytesToSend);
 	string getMsg();

@@ -2,3 +2,5 @@
 /Release
 /Debug-ARM
 /Debug-BB-CrossCC
+/PiDebugCrossCompile/
+/Default/

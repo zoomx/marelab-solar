@@ -49,6 +49,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <sstream>
+
+#include <sys/sysinfo.h>
+
 #include "mconfig.h"
 
 
@@ -58,10 +61,9 @@
 //#include "marelab/LedString.h"
 //#include "marelab/LedTimerListe.h"
 #include "marelab/IncomingMsg.h"
-#include "globals/json/json.h"
-#include "globals/json/writer.h"
-#include "globals/json/reader.h"
-
+#include "json/json.h"
+#include "json/writer.h"
+#include "json/reader.h"
 #include "marelab/ConfigNucleus.h"
 #include "marelab/ipccom.h"
 #include "marelab/PluginRegistry.h"
@@ -75,17 +77,15 @@
 #include "modbus/marelab_bus.h"
 */
 #include "marelab/ConfigRegister.h"
-#include "globals/json/json.h"
+#include "json/json.h"
 #include "globals/IJsonSerializable.h"
 #include "globals/LConnection.h"
 #include "marelab/CJsonSerializer.h"
 #include "marelab/mlog.h"
+#include "marelab/DataLogger.h"
 
-
-
-
-
-
+//LUA INCLUDING FOR SCRIPTING
+#include <lua.hpp>
 
 // On Linux, you must compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
@@ -129,6 +129,17 @@ time_t 			tim;				// SystemTime
 volatile int bStop = false;			// To stop threads
 
 ipccom *ipcs;						// Linux IPC Sockets/Queue this is the communication channel cgi deamon cgi
+
+
+// Global System Information
+time_t marelab_gStartTime;   // Starttime of marelab
+
+// Global LOGGER Service for Data aquisition
+DataLogger *datalogger;
+
+
+// Global Exit flag if true Deamon is quit
+bool deamonexit = false;
 
 /*
 static void child_handler(int signum)
@@ -230,9 +241,9 @@ static void daemonize( const char *lockfile )
 }
 */
 void SendMsgBack(string msg){
-	if (ipcs->sendSockServer(msg))
-			MLOG::log("Sending message back: "+msg,__LINE__,__FILE__);
-	else
+	if (!ipcs->send2cgi(msg))
+		//	MLOG::log("Sending message back: "+msg,__LINE__,__FILE__);
+	//else
 			MLOG::log("ERROR sending back message :"+msg,__LINE__,__FILE__);
 }
 
@@ -411,7 +422,6 @@ void  mcu_PLUGINSCAN(){
 void mcu_NUCLEUS_CONFIGSAVE(){
 
 	    Json::Value para = msgin.getParameter();
-	    cout <<"PARAMETER"<< para.toStyledString() << endl;
 	    Json::Value element;
 	    MLOG::log("mcu_NUCLEUS_CONFIGSAVE: " + para.toStyledString(),__LINE__,__FILE__);
 	    PluginObject* logicplugin;
@@ -451,10 +461,8 @@ void READ_CONFIG(string command, string plugin_name) {
 	PluginObject* pluginobj = pluginRegistry->GetPluginWithName(plugin_name);
 	if (pluginobj!=NULL){
 		pluginobj->plugin->GetConfigAsJSON(output);
-		//cout << output << endl;
 		SendMsgBack(output);
 	}
-	//
 	else{
 		SendMsgBack("UNKNOWN PLUGIN :" +plugin_name);
 	}
@@ -467,7 +475,6 @@ void SAVE_CONFIG(string command, string plugin_name,Json::Value& para) {
 	string output;
 	PluginObject* pluginobj = pluginRegistry->GetPluginWithName(plugin_name);
 	pluginobj->plugin->SetConfigAsJSON(para);
-	//cout << para.toStyledString()<< endl;
 	configRegistry.writeConfig();
 	SendMsgBack("{COMMAND=SAVE_CONFIG}");
 }
@@ -490,27 +497,10 @@ void ADAPTER_GET_CONFIG_HTML(string command, string plugin_name,Json::Value& par
 // Get Infos of the installed plugins
 void GET_PLUGININFO(string command, string plugin_name){
 	string output;
-	//PluginObject* pluginobj = pluginRegistry.GetPluginWithName(plugin_name);
 	Json::Value plugins;
 	pluginRegistry->SerializeAjax(plugins);
 	string plugs = plugins.toStyledString();
-	//cout << plugs;
-	//string retmsg = "{\"COMMAND\":\"GET_PLUGININFO\",\"PARAMETER\":\""+plugs+"\"}";
 	SendMsgBack(plugs);
-	//if (plugin_name != ""){
-	/*
-		if (pluginobj!=NULL){
-			output = pluginobj->plugin->getName();
-			output = output + " V"+pluginobj->plugin->getVersion() ;
-			string retmsg = "{\"COMMAND\":\"GET_PLUGININFO\",\"PARAMETER\":\""+output+"\"}";
-			SendMsgBack(retmsg);
-		}
-		else{
-
-		}
-	//}
-	 */
-
 }
 
 // Get Infos of the installed Adapter plugins
@@ -542,11 +532,7 @@ void deamon_MLOG()
 		string logmsg = encodeForJSON(MLOG::getLogMsg());
 		logmsg = "\"" + logmsg +"\"";
 		string retmsg = "{\"COMMAND\":\"deamon_LOG\",\"PARAMETER\":"+logmsg+"}";
-		cout << endl;
-		cout << "RETMSG: " << endl;
-		cout << retmsg << endl;
-		cout << endl;
-		//retmsg = "{\"COMMAND\":\"deamon_LOG\",\"PARAMETER\":\"TEST A B C \"}";
+		MLOG::log("deamon_MLOG() ret msg= "+retmsg ,__LINE__,__FILE__);
 		SendMsgBack(retmsg);
 
 	}
@@ -565,13 +551,13 @@ Json::Value GetPluginConnectors(string pluginName){
 	Json::Value pluginConnectorList = Json::nullValue;
 	if (pluginRegistry->GetPluginWithName(pluginName)!=NULL)
 	{
-		if (pluginRegistry->GetPluginWithName(pluginName)->typeOfPlugin=="LOGIC"){
+		if (pluginRegistry->GetPluginWithName(pluginName)->GetTypeOfPlugin()=="LOGIC"){
 			pluginConnectorList = pluginRegistry->GetPluginWithName(pluginName)->plugin->ConGetConnectorList();
 			return pluginConnectorList;
 		}
 	}
 	if (pluginRegistry->GetAdapterWithName(pluginName)!=NULL){
-		if (pluginRegistry->GetAdapterWithName(pluginName)->typeOfPlugin=="ADAPTER"){
+		if (pluginRegistry->GetAdapterWithName(pluginName)->GetTypeOfPlugin()=="ADAPTER"){
 			pluginConnectorList = pluginRegistry->GetAdapterWithName(pluginName)->plugin->ConGetConnectorList();
 			return pluginConnectorList;
 		}
@@ -579,6 +565,49 @@ Json::Value GetPluginConnectors(string pluginName){
 	return pluginConnectorList;
 }
 
+// Returns a JSON Obj containing all phy Adapter Connetors
+Json::Value  GetPhysicalConnectors(){
+	Json::Value pluginConnectorList = Json::nullValue;
+	Json::Value retJson= Json::nullValue;;
+	int countOfAdapters = pluginRegistry->getAdapterCount();
+	cout << pluginRegistry->DebugAdapterList() << endl;
+	for (int i=0; i < countOfAdapters; i++){
+		string name = pluginRegistry->GetAdapterEntry(i)->plugin->getName();
+		if (pluginRegistry->GetAdapterEntry(i)->plugin->getTypeOfPlugin()=="ADAPTER"){
+			pluginConnectorList = pluginRegistry->GetAdapterEntry(i)->plugin->ConGetConnectorList();
+			retJson["PHYSICAL_CONNETOR_LIST"].append(pluginConnectorList);
+			cout << "Adapter:"<< name << endl;
+			cout << "Adapter:"<< pluginRegistry->GetAdapterWithName(name)->plugin->ConGetConnectorList().toStyledString() << endl;
+		}
+	}
+	cout << "GetPhysicalConnectors:"<< pluginConnectorList.toStyledString() << endl;
+
+	return retJson;
+}
+
+// Returns a JSON Obj containing all logical Adapter Connetors like dimme, stream etc.
+// These are the Function plugins that have connectors that needed to be tight to a
+// physical connector.
+// -> Logic Adapter/Plugin implements the functionality
+// -> Physical Adapter/Plugin implements the hardware ports that can be used by logic
+Json::Value  GetLogicalConnectors(){
+	Json::Value pluginConnectorList = Json::nullValue;
+	Json::Value retJson= Json::nullValue;;
+	int countOfLogicPluins = pluginRegistry->getPluginCount();
+	cout << pluginRegistry->DebugLogicList() << endl;
+	for (int i=0; i < countOfLogicPluins; i++){
+		string name = pluginRegistry->GetPluginEntry(i)->plugin->getName();
+		if (pluginRegistry->GetPluginEntry(i)->plugin->getTypeOfPlugin()=="LOGIC"){
+			pluginConnectorList = pluginRegistry->GetPluginEntry(i)->plugin->ConGetConnectorList();
+			retJson["LOGICAL_CONNETOR_LIST"].append(pluginConnectorList);
+			cout << "Adapter:"<< name << endl;
+			cout << "Adapter:"<< pluginRegistry->GetPluginWithName(name)->plugin->ConGetConnectorList().toStyledString() << endl;
+		}
+	}
+	cout << "GetPhysicalConnectors:"<< pluginConnectorList.toStyledString() << endl;
+
+	return retJson;
+}
 
 /*
  * MAIN LOOP FOR COMUNICATION WITH THE MARELAB SYSTEM
@@ -598,18 +627,19 @@ Json::Value GetPluginConnectors(string pluginName){
  */
 void *marelab_Socket_thread(void *)
 {
-	while (1) /*Endlosschleife*/
+
+	while (!deamonexit) /*Endlosschleife*/
 	{
 	// Incoming Msg per socket
 	if (ipcs->recvSock()) {
 
-		MLOG::log("marelab_Socket_thread: MSG ["+ipcs->getMsg()+"]...",__LINE__,__FILE__);
+		//MLOG::log("marelab_Socket_thread: MSG ["+ipcs->getMsg()+"]...",__LINE__,__FILE__);
 		if (ParseIncomingMsg(ipcs->getMsg()) == true) {
 			string command = msgin.getCommand().asString();
 
 			if (command.compare("EXIT") == 0) {
 				MLOG::log("marelab_Socket_thread: marelab deamon exit command ...",__LINE__,__FILE__);
-
+				deamonexit = true;
 			}
 
 			else if (command.compare("mcu_VERSION") == 0) {
@@ -661,8 +691,122 @@ void *marelab_Socket_thread(void *)
 				deamon_MLOG();
 			}
 
+			/* Send TIME to the client */
+			else if (command.compare("GETTIME") == 0) {
+				string datum;
+				long uptime;
+				time_t t = time(0);   // get time now
+				struct tm *now = localtime( & t );
+
+				datum = i2str((now->tm_year + 1900)) + '-'
+						        + i2str((now->tm_mon + 1)) + '-'
+						        + i2str(now->tm_mday)+ ' '
+						        + i2str(now->tm_hour)+ ':'
+						        + i2str(now->tm_min) + ':'
+						        + i2str(now->tm_sec);
 
 
+			   uptime = t - marelab_gStartTime;
+
+			   //MLOG::log("GETTIME ..." + datum + " UpTime" + i2str(uptime),__LINE__,__FILE__);
+
+			   SendMsgBack("{\"COMMAND\":\"GETTIME\","
+					       "\"YEAR\":\""+i2str((now->tm_year + 1900))+"\","
+					       "\"MONTH\":\""+i2str((now->tm_mon+1))+"\","
+					       "\"DAY\":\""+i2str((now->tm_mday))+"\","
+					       "\"HOUR\":\""+i2str((now->tm_hour))+"\","
+					       "\"MIN\":\""+i2str((now->tm_min))+"\","
+					       "\"SEC\":\""+i2str((now->tm_sec))+"\","
+			   	   	   	   "\"UPTIME\":\""+i2str((uptime))+"\"}");
+			}
+
+			/* Send SYSINFO to the client */
+			else if (command.compare("SYSINFO") == 0) {
+
+				  struct sysinfo linuxinfo;
+				  sysinfo (&linuxinfo);
+
+
+				 //  MLOG::log("GETTIME ..." + datum + " UpTime" + i2str(uptime),__LINE__,__FILE__);
+
+				   SendMsgBack("{\"COMMAND\":\"SYSINFO\","
+								       "\"UPTIME\":\""+		i2str(linuxinfo.uptime)+"\","
+								       "\"LOAD1\":\""+		i2str(linuxinfo.loads[0] )+"\","
+								       "\"LOAD5\":\""+		i2str(linuxinfo.loads[1])+"\","
+								       "\"LOAD15\":\""+		i2str(linuxinfo.loads[2])+"\","
+								       "\"FREERAM\":\""+	i2str(linuxinfo.freeram)+"\","
+								       "\"SHAREDRAM\":\""+	i2str(linuxinfo.sharedram)+"\","
+								       "\"BUFFERRAM\":\""+	i2str(linuxinfo.bufferram)+"\","
+								       "\"TOTALSWAP\":\""+	i2str(linuxinfo.totalswap)+"\","
+								       "\"FREESWAP\":\""+	i2str(linuxinfo.freeswap)+"\","
+								       "\"PROCS\":\""+		i2str(linuxinfo.procs)+"\","
+								       "\"TOTALHIGH\":\""+	i2str(linuxinfo.totalhigh)+"\","
+								       "\"FREEHIGH\":\""+	i2str(linuxinfo.freehigh)+"\"}");
+			}
+
+
+			// GET ALL SETUPDATA FROM THE CONFIG AS JSON STRING
+			else if (command.compare("GETMARELABSETUPDATA") == 0) {
+				string DAEMON_LOCK_PATH  = nucleusConfig.getCfDaemonLockPath();
+				string DAEMON_NAME = nucleusConfig.getCfDaemonName();
+				string DAEMON_NAME_LOCK= nucleusConfig.getCfDaemonNameLock();
+				string DEAMON_PATH= nucleusConfig.getCfDeamonPath();
+				string NUCLEUS_VERSION= nucleusConfig.getCfNucleusVersion();
+				string PLUGINDIR= nucleusConfig.getCfPlugindir();
+				string RUN_AS_USER= nucleusConfig.getCfRunAsUser();
+				string SOCK_PATH= nucleusConfig.getCfSockPath();
+				string LOG_LEVEL=nucleusConfig.getCfLogLevel();
+				SendMsgBack("{\"COMMAND\":\"SENDMARELABSETUPDATA\","
+						    "\"CONFIGDATA\":["
+							"{\"DAEMON_LOCK_PATH\":\""+		DAEMON_LOCK_PATH +"\"},"
+							"{\"DAEMON_NAME\":\""+			DAEMON_NAME+"\"},"
+							"{\"DAEMON_NAME_LOCK\":\""+		DAEMON_NAME_LOCK+"\"},"
+							"{\"DEAMON_PATH\":\""+			DEAMON_PATH+"\"},"
+							"{\"NUCLEUS_VERSION\":\""+		NUCLEUS_VERSION+"\"},"
+							"{\"RUN_AS_USER\":\""+			RUN_AS_USER+"\"},"
+							"{\"SOCK_PATH\":\""+				SOCK_PATH+"\"},"
+							"{\"LOG_LEVEL\":\""+				LOG_LEVEL+"\"},"
+							"{\"PLUGINDIR\":\""+				PLUGINDIR+"\"}]}");
+			}
+
+			//SAVE MARELAB_CONFIG DATA BACK
+			else if (command.compare("SETMARELABSETUPDATA") == 0) {
+				Json::Value para = msgin.getParameter();
+				Json::Value element;
+				MLOG::log("NUCLEUS_CONFIGSAVE: " + para.toStyledString(),__LINE__,__FILE__);
+				Json::Value  memberVAL =  para["MARELAB_CONFIG"];
+
+				for (unsigned int j = 0; j <  memberVAL.size(); j++ )
+				{
+					Json::Value entry =  memberVAL[j];
+					Json::Value::Members member = entry.getMemberNames();
+					for(unsigned int i=0; i < member.size(); ++i)
+					{
+						string memberName = member[i];
+						if (memberName == "DAEMON_NAME")
+							nucleusConfig.setCfDaemonName(memberVAL[j][memberName].asString());
+						else if (memberName == "DAEMON_LOCK_PATH")
+							nucleusConfig.setCfDaemonLockPath(memberVAL[j][memberName].asString());
+						else if (memberName == "DAEMON_NAME_LOCK")
+							nucleusConfig.setCfDaemonNameLock(memberVAL[j][memberName].asString());
+						else if (memberName == "DEAMON_PATH")
+							nucleusConfig.setCfDeamonPath(memberVAL[j][memberName].asString());
+						else if (memberName == "NUCLEUS_VERSION")
+							nucleusConfig.setCfNucleusVersion(memberVAL[j][memberName].asString());
+						else if (memberName == "RUN_AS_USER")
+							nucleusConfig.setCfRunAsUser(memberVAL[j][memberName].asString());
+						else if (memberName == "SOCK_PATH")
+							nucleusConfig.setCfSockPath(memberVAL[j][memberName].asString());
+						else if (memberName == "LOG_LEVEL")
+							nucleusConfig.setCfLogLevel(memberVAL[j][memberName].asString());
+						else if (memberName == "PLUGINDIR")
+							nucleusConfig.setCfPlugindir(memberVAL[j][memberName].asString());
+					}
+				}
+
+				configRegistry.writeConfig();
+				SendMsgBack("{COMMAND=CONFIGSAVE_OK}");
+			}
 
 
 			/*
@@ -715,16 +859,18 @@ void *marelab_Socket_thread(void *)
 				Json::Value para = msgin.getParameter();
 				//MLOG::log("marelab_Socket_thread: GET_CONNECTOR_FOR_PLUGIN("+ msgin.getPlugin() + ") ...", __LINE__,__FILE__);
 				string connectorList = GetPluginConnectors(para["PLUGINNAME"].asString()).toStyledString();
-
 				SendMsgBack("{\"COMMAND\":\"GET_CONNECTOR_FOR_PLUGIN\",\"CONNECTOR\":"+connectorList+"}");
 			}
-
-
-
-
-
-
-
+			else if (command.compare("GET_ALL_PHYSICAL_CONNECTORS") == 0) {
+				Json::Value para = msgin.getParameter();
+				string connectorList = GetPhysicalConnectors().toStyledString();
+				SendMsgBack("{\"COMMAND\":\"GET_ALL_PHYSICAL_CONNECTORS\",\"CONNECTOR\":"+connectorList+"}");
+			}
+			else if (command.compare("GET_ALL_LOGICAL_CONNECTORS") == 0) {
+				Json::Value para = msgin.getParameter();
+				string connectorList = GetLogicalConnectors().toStyledString();
+				SendMsgBack("{\"COMMAND\":\"GET_ALL_LOGICAL_CONNECTORS\",\"CONNECTOR\":"+connectorList+"}");
+			}
 
 			else {
 				/*
@@ -733,11 +879,11 @@ void *marelab_Socket_thread(void *)
 				 */
 
 				 Json::Value para = msgin.getParameter();
-				 cout <<"PARAMETER FOR PLUGINS "<< para.toStyledString() << endl;
 
+				 MLOG::log("PARAMETER FOR PLUGINS :"+para.toStyledString(),__LINE__,__FILE__);
 
 				 for (int LogicPluginNo = 0;LogicPluginNo < pluginRegistry->getPluginCount();LogicPluginNo++) {
-					cout << "FOR PLUGIN: " << pluginRegistry->GetPluginEntry(LogicPluginNo)->plugin->getName()<< endl;
+					MLOG::log("FOR PLUGIN :"+pluginRegistry->GetPluginEntry(LogicPluginNo)->plugin->getName(),__LINE__,__FILE__);
 					pluginRegistry->getPluginObject(LogicPluginNo)->Command(pluginRegistry->GetPluginEntry(LogicPluginNo)->adapter,para);
 				 }
 
@@ -768,22 +914,23 @@ void *marelab_Socket_thread(void *)
 		SendMsgBack(retmsg);
 	}
 	}
-	return 0;
+	ipcs->closeServer();
+	pthread_exit(0);
 }
-
 
 
 void marelab_daemon_entry_point()
 {
 	MLOG::log( "marelab_daemon_entry_poin: marelab deepblue deamon starting now...",__LINE__,__FILE__ );
-
 	try{
 		ipcs = new ipccom(&nucleusConfig);
 		ipcs->openServer();
+		MLOG::log( "NUCLEUS SOCKET SERVER CREATED ...",__LINE__,__FILE__ );
 	}
 	catch(string &Exception){
 		MLOG::log( "marelab_daemon_entry_poin: ERROR="+Exception+ " ... terminating deamon...",__LINE__,__FILE__ );
-
+		ipcs->closeServer();
+		delete ipcs;
 	}
 
 
@@ -800,8 +947,10 @@ void marelab_daemon_entry_point()
 	/////////////////////////////////////////////////////////////////////////
 	// This is the Daemon Loop                                             //
 	/////////////////////////////////////////////////////////////////////////
-	while (1)
+	while (!deamonexit)
 	{
+
+
 		time(&tim);
 		//tm *timeNow = localtime(&tim);						// Get the time now
 		//syslog(MLOG_ERR, "COMMAND [%s] unknown  ...",command.c_str());
@@ -815,18 +964,53 @@ void marelab_daemon_entry_point()
 		Json::Value test;
 		for (int LogicPluginNo=0; LogicPluginNo < pluginRegistry->getPluginCount() ; LogicPluginNo++){
 			// Gets a logic Plugin & performance the work
-			//cout << "Adapter:" << pluginRegistry->GetPluginEntry(LogicPluginNo)->adapter->getName() <<endl;
 			pluginRegistry->getPluginObject(LogicPluginNo)->work(localtime(&tim),pluginRegistry->GetPluginEntry(LogicPluginNo)->adapter,test);
-			//pluginRegistry->GetPluginEntry(counter)->adapter->work(timeNow,NULL);
 		}
 		sleep(2);	// lets sleep a few ticks
 
 	}
+	ipcs->closeServer();
+	delete ipcs;
 }
 
 
 
 int main( int argc, char *argv[] ) {
+
+	// START LUA
+	// create new Lua state
+
+	lua_State *lua_state;
+	    lua_state = luaL_newstate();
+
+	    // load Lua libraries
+	    static const luaL_Reg lualibs[] =
+	    {
+	        { "base", luaopen_base },
+	        { NULL, NULL}
+	    };
+
+	    const luaL_Reg *lib = lualibs;
+	    for(; lib->func != NULL; lib++)
+	    {
+	        lib->func(lua_state);
+	        lua_settop(lua_state, 0);
+	    }
+
+    // Initilize global DataLogger
+	datalogger = new DataLogger();
+
+	//27sec for 9000 entrys
+	//for (int i=0;i< 9000;i++)
+	//{
+	//	time_t t1=time(NULL);
+	//	datalogger->AddLogData("PH1",t1,0.1);
+	//}
+
+	//datalogger->Export("TEST",time(NULL));
+
+
+
 	// First action add the global Config Object
 	configRegistry.addObj(&nucleusConfig);
 	// Read only a part of the ConfigFile to have a
@@ -935,18 +1119,31 @@ int main( int argc, char *argv[] ) {
      */
 
 
+    marelab_gStartTime = time(NULL);   // sets the starttime of marelab deamon
+
     /* One may wish to process command line arguments here */
+
 
 
     /* Daemonize */
     if(daemon)
     	//daemonize( DAEMON_LOCK_PATH DAEMON_NAME_LOCK );
 
+    // run the Lua script
+    luaL_dofile(lua_state, "hellolua.lua");
+
     /* Now we are a daemon -- do the work for which we were paid */
     marelab_daemon_entry_point();
 
     /* Finish up */
     MLOG::log("marelab deamon exit ...." ,__LINE__,__FILE__);
+
+    // close global data logger
+
+    delete pluginRegistry;
+    delete datalogger;
+    // close the Lua state
+    lua_close(lua_state);
     closelog();
     return 0;
 }

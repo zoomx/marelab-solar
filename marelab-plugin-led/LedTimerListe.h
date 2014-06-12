@@ -42,10 +42,11 @@ class LedTimerListe  : public IJsonSerializable
 {
 private:
 	vector<LedString> LD_StringListe;
-	vector<int> lastPower;
+
 	string filestore;
 
 public:
+	vector<int> lastPower;
 	LedTimerListe(void){};
     ~LedTimerListe( void );
     virtual void Serialize( Json::Value& root );
@@ -54,7 +55,7 @@ public:
     void SetFileStore(string fileStore);
     void SaveFile();
 	void AddLed(LedString ledstring);
-	void AddChangeLed(string led_number, string led_channel, string led_name, string led_intensity,string chartcolor);
+	void AddChangeLed(string led_number, string led_channel, string led_name, string led_intensity,string chartcolor,string uuid);
 	vector<string> split(const string& strValue, char separator);
 	int DelLed(int led_number);
 	int CountLed();
@@ -63,6 +64,7 @@ public:
 	LedString* GetLed(int led_number);
 	LedString* GetLedArrayNo(int led_number);
 	int GetPowerValue(int led_number,tm *time2Check);
+	int SetLastPowerValue(int led_number,tm *time2Check,int power);
 };
 
 } /* namespace std */

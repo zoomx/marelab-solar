@@ -34,7 +34,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
-#include "../globals/json/json.h"
+#include "../json/json.h"
 #include "../globals/IJsonSerializable.h"
 
 using namespace std;
@@ -52,6 +52,7 @@ private:
 	 string cfSOCK_PATH;				// Socket File Path
 	 string cfPLUGINDIR;				// Dir for nucleus plugins
 	 string cfNUCLEUS_VERSION;			// Version of Nucleus
+	 string cfLOG_LEVEL;
 
 
 	Json::Value command;
@@ -59,8 +60,9 @@ private:
 
 public:
 	ConfigNucleus(){
-
+		cfLOG_LEVEL =  "INFO";
 	};
+
     ~ConfigNucleus(){
 
     };
@@ -85,6 +87,8 @@ public:
     void setCfRunAsUser(string cfRunAsUser);
     string getCfSockPath() const;
     void setCfSockPath(string cfSockPath);
+    string getCfLogLevel() const;
+    void setCfLogLevel(string loglevel);
     int getCfTransferBuffer() const;
     void setCfTransferBuffer(int cfTransferBuffer);
 

@@ -4,8 +4,9 @@
  *  Created on: 26.03.2013
  *      Author: marelab
  */
-
+#include <string>
 #include "I2CDEVICE.h"
+#include "LConnection.h"
 
 /*
  * Set all i2c device handling infos
@@ -20,6 +21,8 @@ I2C_DEVICE::I2C_DEVICE(	string vdevice_name,uint8_t vdevice_adr,string vi2c_bus,
 
 I2C_DEVICE::~I2C_DEVICE() {
 	// TODO Auto-generated destructor stub
+	cout << "I2C_Device:" << device_name << " Destructor..." << endl;
+	delete (LConnection*)device_class;
 }
 
 /*

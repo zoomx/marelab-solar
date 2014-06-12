@@ -50,7 +50,18 @@ public:
 	}
 	virtual ~Adapter_I2C(){
 		//delete pcf8574;
+		cout << "Adapter_I2C Destructor..." << endl;
+		Clear_I2C_DeviceList();
+		i2c_device_list.clear();
 	}
+
+	// Clear all Plugins from adapter list
+	void Clear_I2C_DeviceList(){
+		for (unsigned int i=0; i < i2c_device_list.size(); i++)
+			delete i2c_device_list[i];
+
+	}
+
 	/*
 	 * Adding a I2C Chip to the list
 	 * TODO:
@@ -91,9 +102,9 @@ public:
 		if (!json.null)
 		{
 			// Which modul is used by LED
-			if (json["LOGIC_PLUGIN_NAME"]=="LedDimmer")
+			if ((json["LOGIC_PLUGIN_NAME"]=="LedDimmer") ||(json["LOGIC_PLUGIN_NAME"]=="Stream"))
 			{
-				cout << "WORK-FROM-I2C ADAPTER DIMMVALUE:" << json["DIMMER_VALUE"].asInt() << "CH: "<< json["DIMMER_CHANNEL"].asInt() << endl;
+				cout << "I2CWORK-FROM-ADAPTER PLUGIN:"<< adapter->getName() << " DIMMVALUE:" << json["DIMMER_VALUE"].asInt() << "CH: "<< json["DIMMER_CHANNEL"].asInt() << endl;
 
 				// Here are the details to drive the Hardware
 				// TODO: Select ChipTyp according to config
@@ -217,6 +228,8 @@ public:
 	  root["ADR_PCF8574_1"]=20;
 	  Json::Value i2cvalue;
 	  I2C_DEVICE *i2cdev;
+	  cout << "**********I2C DEVIVE LIST LEN =" << i2c_device_list.size()<< endl;
+	  //cout << root.toStyledString();
 
 	  for (unsigned int i=0; i < i2c_device_list.size(); i++) {
 		  i2cdev =  i2c_device_list[i];
@@ -236,7 +249,10 @@ public:
 	  //i2c_bus = root["I2C Adapter"]["I2C_BUS"].asString() ;
 	  //i2c.setI2CBus(i2c_bus);
 	  //i2c.setI2CAdr(1);
-
+	  Clear_I2C_DeviceList();
+	  i2c_device_list.clear();
+	  cout << "**********I2C DEVIVE LIST LEN =" << i2c_device_list.size()<< endl;
+	  std::cout << "READ I2C-DEVICE COUNT before=" << root["I2C Adapter"]["CHIPS"].size() << endl;
 	  // read all i2c devices
 	  for (unsigned int i=0; i < root["I2C Adapter"]["CHIPS"].size(); i++) {
 	  		if (root["I2C Adapter"]["CHIPS"][i]["DEVICE_NAME"].asString()=="PCF8574")
@@ -266,7 +282,8 @@ public:
 	  			Add_I2C_Device(device);
 	  		}
 	  	}
-
+	  std::cout << "READ I2C-DEVICE COUNT after=" << root["I2C Adapter"]["CHIPS"].size() << endl;
+	  cout << "**********I2C DEVIVE LIST LEN =" << i2c_device_list.size()<< endl;
 	  /* Test if all i2c chips have a LConnection info */
 	  for (unsigned int i=0; i < i2c_device_list.size(); i++) {
 		  if (i2c_device_list[i]->getDeviceName() == "MAX520"){
@@ -310,13 +327,19 @@ public:
  		 adapterChips.clear();
  		 //cout << "ADAPTER DEVICE NAME = " << i2c_device_list[i]->getDeviceName() << endl;
  		  if (i2c_device_list[i]->getDeviceName() == "MAX520"){
- 			  MAX520* max 				=  	(MAX520*)i2c_device_list[i]->getDeviceClass();
- 			  adapterChips["CHIPTYP"]	=  	"MAX520";
- 			  adapterChips["CONNECTORS"]= 	max->ConGetConnectors();
+ 			  MAX520* max 					=  	(MAX520*)i2c_device_list[i]->getDeviceClass();
+ 			  adapterChips["CHIPTYP"]		=  	i2c_device_list[i]->getDeviceName();
+ 			  adapterChips["DEVICE_ADR"]	=  	i2c_device_list[i]->getDeviceAdr();
+ 			  adapterChips["DEVICE_NO"]		=  	i2c_device_list[i]->getDeviceNo();
+ 			  adapterChips["DEVICE_BUS"]	=  	i2c_device_list[i]->getI2cBus();
+ 			  adapterChips["CONNECTORS"]    = 	max->ConGetConnectors();
  	 	  }
  		  else if (i2c_device_list[i]->getDeviceName() == "PCF8574"){
  			  PCF8574* pcf 				=   (PCF8574*)i2c_device_list[i]->getDeviceClass();
- 			  adapterChips["CHIPTYP"]	=  	"PCF8574";
+ 			  adapterChips["CHIPTYP"]		=  	i2c_device_list[i]->getDeviceName();
+ 			  adapterChips["DEVICE_ADR"]	=  	i2c_device_list[i]->getDeviceAdr();
+ 			  adapterChips["DEVICE_NO"]		=  	i2c_device_list[i]->getDeviceNo();
+ 			  adapterChips["DEVICE_BUS"]	=  	i2c_device_list[i]->getI2cBus();
  			  adapterChips["CONNECTORS"]= 	pcf->ConGetConnectors();
  		//	  cout << adapterChips["CONNECTORS"].toStyledString()<< endl;
  		  }
@@ -336,6 +359,7 @@ extern "C" Plugin* create() {
 }
 
 extern "C" void destroy(Plugin* p) {
+	p->~Plugin();
     delete p;
 }
 #endif

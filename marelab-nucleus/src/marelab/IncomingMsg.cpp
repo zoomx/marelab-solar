@@ -79,12 +79,11 @@ void IncomingMsg::Deserialize( Json::Value& root )
 	command = root.get("COMMAND","");
 	parameter = root.get("PARAMETER","");
 	//Json::Value para2;
-	//cout << "PARA beim Parsen:"<< parameter.get("PARAMETER","") << endl;
 	if (parameter.isString()){
 		cout << "MSG PARA STRING:" << parameter.get("PARAMETER","").asString()<<endl;
 	}
 	else if (parameter.isObject()){
-		cout << "MSG PARA OBJ:" << parameter.toStyledString()<<endl;
+		//cout << "MSG PARA OBJ:" << parameter.toStyledString()<<endl;
 		//cout << "MSG PARA OBJ:" << endl;
 	}
 	else if (parameter.isArray()){

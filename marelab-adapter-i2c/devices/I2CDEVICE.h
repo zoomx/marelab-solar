@@ -9,7 +9,7 @@
 #define I2CDEVICE_H_
 #include <inttypes.h>
 #include <string>
-#include "../globals/json/json.h"
+#include "../json/json.h"
 #include "../globals/IJsonSerializable.h"
 using namespace std;
 

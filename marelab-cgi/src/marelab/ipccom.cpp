@@ -33,7 +33,9 @@
 #include <syslog.h>
 
 #include "ipccom.h"
+//#include "marelabconf-pi.h"
 #include "marelabconf.h"
+
 
 namespace std {
 
@@ -43,7 +45,12 @@ namespace std {
  */
 ipccom::ipccom() {
 }
-
+void ipccom::closeServer(){
+	if (socketid != -1){
+		close(socketid);
+		syslog( LOG_ERR, "Socket Client closed (ID:%i)",socketid);
+	}
+}
 void ipccom::openServer() {
 	 int len;
 	 struct sockaddr_un local;
@@ -86,7 +93,8 @@ void ipccom::openClient() {
 		 len = strlen(remote.sun_path) + sizeof(remote.sun_family);
 		 if (connect(socketid, (struct sockaddr *)&remote, len) == -1) {
 			 string error =  strerror(errno);
-			 throw error.c_str() ;
+			 syslog( LOG_ERR, "CGI Connect 2 Nuleus Error [%s] ERROR...",error.c_str());
+
 		 }
 	 }
 }
@@ -98,13 +106,13 @@ bool ipccom::recvSock(){
 
     t = sizeof(remote);
     if ((socketret = accept(socketid, (struct sockaddr *)&remote,&t)) == -1) {
-    	//string error =  strerror(errno);
-    	//cout << error << endl;
+    	string error =  strerror(errno);
+    	syslog( LOG_ERR, "CGI recv from Nuleus Error [%s] ERROR...",error.c_str());
     	return false;
     }
     else
     {
-    	syslog( LOG_ERR, "Connection accepted...");
+    	syslog( LOG_ERR, "CGI recv from Nuleus Connection accepted...");
     	/* Connected lets get something to recv*/
     	memset( sockbuf,0, TRANSFER_BUFFER);
         n = recv(socketret, sockbuf, TRANSFER_BUFFER, 0);
@@ -121,19 +129,25 @@ bool ipccom::recvSock(){
     return false;
 }
 
-bool ipccom::recvSockClient(){
-	int  n;
 
+
+
+bool ipccom::recvSockFromNucleus(){
+	int  n;
     memset( sockbuf,0, TRANSFER_BUFFER);
+    syslog( LOG_ERR, "CGI waits for Nuleus answers ...");
     n = recv(socketid, sockbuf, TRANSFER_BUFFER, 0);
     if (n <= 0)
     {
-      if (n < 0) {
-      syslog( LOG_ERR, "Socket recv error...");
-      close(socketid);
+      if (n < 0)
+      {
+    	  string error =  strerror(errno);
+    	  syslog( LOG_ERR, "CGI recv from Nuleus Error [%s] ERROR...",error.c_str());
       }
-      return false;
+      // Return was 0 so normal Soocket shutdown is okay
+      return true;
     }
+    syslog( LOG_ERR, "CGI recv Nuleus values  [%s] ...",getMsg().c_str());
     return true;
 }
 

@@ -88,6 +88,13 @@ void LedString::setChartColor(std::string color){
 	ChartColor = color;
 }
 
+std::string LedString::getUUID(){
+	return UUID;
+}
+
+void LedString::setUUID(string uuid){
+	UUID = uuid;
+}
 
 
 

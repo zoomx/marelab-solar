@@ -21,7 +21,10 @@ src/marelab-solar-deamon.d: ../src/marelab-solar-deamon.cpp \
  ../src/marelab/../globals/json/json.h ../src/marelab/MoonPhase.h \
  ../src/marelab/ConfigRegister.h ../src/globals/IJsonSerializable.h \
  ../src/globals/LConnection.h ../src/marelab/CJsonSerializer.h \
- ../src/marelab/mlog.h
+ ../src/marelab/mlog.h ../src/marelab/DataLogger.h \
+ /usr/include/lua5.2/lua.hpp /usr/include/lua5.2/lua.h \
+ /usr/include/lua5.2/luaconf.h /usr/include/lua5.2/lualib.h \
+ /usr/include/lua5.2/lauxlib.h
 
 ../src/mconfig.h:
 
@@ -86,3 +89,15 @@ src/marelab-solar-deamon.d: ../src/marelab-solar-deamon.cpp \
 ../src/marelab/CJsonSerializer.h:
 
 ../src/marelab/mlog.h:
+
+../src/marelab/DataLogger.h:
+
+/usr/include/lua5.2/lua.hpp:
+
+/usr/include/lua5.2/lua.h:
+
+/usr/include/lua5.2/luaconf.h:
+
+/usr/include/lua5.2/lualib.h:
+
+/usr/include/lua5.2/lauxlib.h:

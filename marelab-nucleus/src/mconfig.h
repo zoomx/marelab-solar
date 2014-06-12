@@ -53,57 +53,9 @@
 #include <string>
 namespace std
 {
-
    extern string  loggmsg ;				// Central Log message string that is send to the client
-
-   static string i2str(int i) {
-   		std::ostringstream buffer;
-   		buffer << i;
-   		return buffer.str();
-   }
-
-
-
-   static string encodeForJSON( const string &sSrc )
-   {
-       ostringstream sRet;
-
-       for( string::const_iterator iter = sSrc.begin(); iter!=sSrc.end(); iter++ )
-       {
-            unsigned char c = (unsigned char)*iter;
-
-            switch( c )
-            {
-                case '"':
-                	sRet << "'";
-                	break;
-
-                case '{':
-                     sRet << "-";
-                     break;
-                case '}':
-                     sRet << "-";
-                     break;
-                case '[':
-                     sRet << "-";
-                     break;
-                case ']':
-                     sRet << "-";
-                     break;
-                case '\r':
-                     sRet << "<br id='loginfo'>";
-                     break;
-                case '\n':
-                     sRet << "<br id='loginfo'>";
-                     break;
-                default:
-                    sRet << c;
-                    break;
-            }
-       }
-       return sRet.str();
-   }
-
+   extern string i2str(int i);
+   extern string encodeForJSON( const string &sSrc );
 }
 
 #endif /* MCONFIG_H_ */

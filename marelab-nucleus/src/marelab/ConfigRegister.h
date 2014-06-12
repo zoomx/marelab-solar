@@ -38,7 +38,7 @@
 #include <cstdlib>   // Required by malloc()
 #include <vector>
 
-#include "../globals/json/json.h"
+#include "../json/json.h"
 #include "../globals/IJsonSerializable.h"
 #include "../marelab/mlog.h"
 
@@ -67,7 +67,7 @@ public:
     	IJsonSerializable* configObj;
     	std::ofstream out(CONFIGFILE);
     	Json::Value serializeRoot;
-    	cout << "TRY TO WRITE CONFIG :" << endl;
+    	MLOG::log("TRY TO WRITE CONFIG SIZE:" + configRegistry.size(),__LINE__,__FILE__);
     	for (unsigned int i=0; i<configRegistry.size(); i++) {
     		configObj =  configRegistry[i];
     		configObj->Serialize(serializeRoot);
@@ -75,10 +75,9 @@ public:
 
     	Json::StyledWriter writer;
     	output = writer.write(serializeRoot);
-    	//cout << output << endl;
     	out << output;
     	out.close();
-    	cout << "CONFIG WRITTEN" << endl;
+    	MLOG::log("CONFIG WRITTEN..." ,__LINE__,__FILE__);
     }
     ;
 
@@ -103,7 +102,8 @@ public:
     		configObj =  configRegistry[i];
 
     	    if (ConfigRegister::Deserialize(configObj,input)){
-    	    	MLOG::log("Config: parse successfull",__LINE__,__FILE__);
+    	    	string file = __FILE__;
+    	    	MLOG::log("Config: parse successfull",__LINE__,file);
     	    }
     	    else{
     	    	// report to the user the failure and their locations in the document.

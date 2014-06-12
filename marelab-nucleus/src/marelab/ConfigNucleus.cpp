@@ -71,6 +71,16 @@ void ConfigNucleus::setCfDeamonPath(string cfDeamonPath)
     cfDEAMON_PATH = cfDeamonPath;
 }
 
+string ConfigNucleus::getCfLogLevel() const
+{
+	return cfLOG_LEVEL;
+}
+
+void ConfigNucleus::setCfLogLevel(string loglevel)
+{
+  cfLOG_LEVEL = loglevel;
+}
+
 string ConfigNucleus::getCfNucleusVersion() const
 {
     return cfNUCLEUS_VERSION;
@@ -124,6 +134,7 @@ void ConfigNucleus::Deserialize( Json::Value& root )
 	setCfSockPath(root["NUCLEUS"]["SOCK_PATH"].asString());
 	setCfPlugindir(root["NUCLEUS"]["PLUGINDIR"].asString());
 	setCfNucleusVersion(root["NUCLEUS"]["NUCLEUS_VERSION"].asString());
+	setCfLogLevel(root["NUCLEUS"]["LOG_LEVEL"].asString());
 
 }
 /**
@@ -144,5 +155,6 @@ void ConfigNucleus::Serialize( Json::Value& root )
 	root["NUCLEUS"]["SOCK_PATH"] = this->getCfSockPath();
 	root["NUCLEUS"]["PLUGINDIR"] = this->getCfPlugindir();
 	root["NUCLEUS"]["NUCLEUS_VERSION"] = this->getCfNucleusVersion();
+	root["NUCLEUS"]["LOG_LEVEL"] = this->getCfLogLevel();
 }
 

@@ -21,21 +21,21 @@ PCF8574::PCF8574(string bus, uint8_t adress) {
 	  * Define MAX520
 	  * DA ports 4
 	  */
-	 connector= new Connector(IO,"PCF8574 IO-0",BI);
+	 connector= new Connector(IO,"PCF8574 IO-0",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-1",BI);
+	 connector= new Connector(IO,"PCF8574 IO-1",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-2",BI);
+	 connector= new Connector(IO,"PCF8574 IO-2",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-3",BI);
+	 connector= new Connector(IO,"PCF8574 IO-3",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-4",BI);
+	 connector= new Connector(IO,"PCF8574 IO-4",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-5",BI);
+	 connector= new Connector(IO,"PCF8574 IO-5",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-6",BI);
+	 connector= new Connector(IO,"PCF8574 IO-6",BI,"");
 	 this->Add(connector);
-	 connector= new Connector(IO,"PCF8574 IO-7",BI);
+	 connector= new Connector(IO,"PCF8574 IO-7",BI,"");
 	 this->Add(connector);
 
 	PCF8574_STATUS = 0;   // All IO Pins OFF

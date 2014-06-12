@@ -49,12 +49,12 @@ private:
 public:
 	ipccom(ConfigNucleus *configMarelab);
 	void openServer();
-	void openClient();
+	//void openClient();
+	void closeServer();
 
 	bool recvSock();
 	bool recvSockClient();
-	bool sendSock(string bytesToSend);
-	bool sendSockServer(string bytesToSend);
+	bool send2cgi(string bytesToSend);
 	string getMsg();
 
 	virtual ~ipccom();

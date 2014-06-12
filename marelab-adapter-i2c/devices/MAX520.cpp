@@ -41,13 +41,13 @@ MAX520::MAX520(string bus, uint8_t adress) {
 	  * Define MAX520
 	  * DA ports 4
 	  */
-	 connector= new Connector(DA,"MAX520 DA-1",OUT);
+	 connector= new Connector(DA,"MAX520 DA-1",OUT,"");
 	 this->Add(connector);
-	 connector= new Connector(DA,"MAX520 DA-2",OUT);
+	 connector= new Connector(DA,"MAX520 DA-2",OUT,"");
 	 this->Add(connector);
-	 connector= new Connector(DA,"MAX520 DA-3",OUT);
+	 connector= new Connector(DA,"MAX520 DA-3",OUT,"");
 	 this->Add(connector);
-	 connector= new Connector(DA,"MAX520 DA-4",OUT);
+	 connector= new Connector(DA,"MAX520 DA-4",OUT,"");
 	 this->Add(connector);
 
 	 /* Init Status */
@@ -66,7 +66,17 @@ MAX520::~MAX520() {
 }
 
 void MAX520::setDimChannel(int channel, int value){
-	cout << "DIMM from MAX520 on I2C bus:" << endl;
+	float aufloesung = 255;
+	float fvalue = (aufloesung / 100)*(float)value;
+	int setval = fvalue;
+	int i2cadr = i2c->getI2CAdr();
+	cout << "DIMM MAX520 I2C BUS    : " << i2c->getI2CBus() << endl;
+	cout << "DIMM MAX520 I2C ADRESS : " << i2cadr << endl;
+	cout << "DIMM MAX520 I2C CHANNEL: " << channel << endl;
+	cout << "DIMM MAX520 I2C VALUE  : " << setval << endl;
+	i2c->openfd();
+	i2c->write_byte(channel,setval);
+	i2c->closefd();
 }
 
 vector <Connector*> MAX520::getConnectionList(){

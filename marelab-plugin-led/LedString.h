@@ -56,6 +56,7 @@ private:
 	int LD_i2c_channel;
 	std::string LD_name;
 	int LD_number;
+	std::string UUID;
 	int LD_TimeArray[DAY_SENSE_POINT];
 	std::string ChartColor;				// Color of String in the chart
 
@@ -66,6 +67,8 @@ public:
 	int getLdNumber() const;
 	int* getLdTimeArray();
 	std::string getChartColor();
+	std::string getUUID();
+	void setUUID(string uuid);
 
 	void setLdI2cChannel(int ldI2cChannel);
 	void setLdName(std::string ldName);

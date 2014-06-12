@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <vector>
 
-#include "../globals/json/json.h"
+#include "../json/json.h"
 #include "../globals/IJsonSerializable.h"
 
 using namespace std;

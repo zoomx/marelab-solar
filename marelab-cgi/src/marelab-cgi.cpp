@@ -49,6 +49,7 @@
 #include "cgicc/HTTPHTMLHeader.h"
 #include "cgicc/HTMLClasses.h"
 #include "marelab/ipccom.h"
+//#include "marelabconf-pi.h"
 #include "marelab/marelabconf.h"
 
 #include <stdio.h>
@@ -161,13 +162,14 @@ int main(int argc, char **argv)
     	   else
     	   {
     		  syslog( LOG_ERR, "Client socket send [%s] ok...",string2send.c_str());
-    		  if (sock.recvSockClient())
+    		  if (sock.recvSockFromNucleus())
     		  {
     		  	syslog( LOG_ERR, "Recv return from server: OK");
     		  	cout << "content-type: text/html" << endl << endl;
     		  	cout << sock.getMsg().c_str();
     		  }
     	   }
+    	   sock.closeServer();
 
        }
        catch(const char *Exception){
@@ -175,6 +177,7 @@ int main(int argc, char **argv)
     	   	   	string errormsg = Exception;
     	   	   	cout << "{\"ERROR\":\"the server seems to be down reason: ["+errormsg+"] check the logs for more info\"}";
     	   		syslog( LOG_ERR, "the server seems to be down reason:  [%s] ... terminating",Exception );
+    	   		sock.closeServer();
        }
 
        return 0;

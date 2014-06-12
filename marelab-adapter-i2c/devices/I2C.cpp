@@ -107,17 +107,21 @@ uint8_t I2C::write_byte(uint8_t address, uint8_t data) {
 		buff[0] = address;
 		buff[1] = data;
 		if (write(fd, buff, sizeof(buff)) != 2) {
+			/*
 			syslog(LOG_ERR,
 					"Failed to write to I2C Slave 0x%x @ register 0x%x [write_byte():write %d]",
 					_i2caddr, address, errno);
+			*/
 			return (-1);
 		} else {
+			/*
 			syslog(LOG_INFO, "Wrote to I2C Slave 0x%x @ register 0x%x [0x%x]",
 					_i2caddr, address, data);
+			*/
 			return (-1);
 		}
 	} else {
-		syslog(LOG_INFO, "Device File not available. Aborting write");
+		//syslog(LOG_INFO, "Device File not available. Aborting write");
 		return (-1);
 	}
 	return 0;

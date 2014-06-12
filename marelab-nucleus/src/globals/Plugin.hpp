@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <string>
 
-#include "../globals/json/json.h"
+#include "../json/json.h"
 #include "IJsonSerializable.h"
 #include "LConnection.h"
 

@@ -26,6 +26,7 @@ SUBDIRS := \
 src \
 src/marelab \
 src/globals/json \
+. \
 Debug/src \
 Debug/src/marelab \
 Debug/src/json \

@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include "json/json.h"
+#include "../json/json.h"
 
 namespace std {
 
@@ -20,16 +20,21 @@ enum CONNECTION_DIR{IN, OUT, BI};
 typedef enum CONNECTION_TYP hardwaretype;
 typedef enum CONNECTION_DIR direction;
 
-class Connector {     		/* Defines a phy connection the plugin needs */
+
+
+/* Defines a phy connection the plugin needs */
+class Connector {
 public:
-	Connector(	hardwaretype   vhdType,string vdescription,direction vdir){
+	Connector(	hardwaretype   vhdType,string vdescription, direction vdir, string uuid){
 		hdType 		= vhdType;
 		description = vdescription;
 		dir			= vdir;
+		UUID		= uuid;
 	};
 	hardwaretype   hdType;
     string description;     /* Description for the connector */
     direction dir;
+    string UUID;
   };
 
 
@@ -40,6 +45,7 @@ public:
 	vector<Connector*> 	connectorList;			// List of connections
 	LConnection(){};
 	virtual ~LConnection(){
+		cout << "LConnection Destructor..." << endl;
 		Clear();
 	};
 
@@ -63,7 +69,7 @@ public:
 
 	void DebugConnectorList(){
 		for (unsigned int i =0;i < connectorList.size();i++){
-			cout << "ConnectorListe " + connectorList[i]->description << endl;
+			cout << "ConnectorListe " + connectorList[i]->description << " - " << connectorList[i]->UUID << endl;
 		}
 	}
 
@@ -74,6 +80,7 @@ public:
 			jsonConnectorItem["HWTYPE"] 		=  connectorList[i]->hdType;
 			jsonConnectorItem["DESCRIPTION"]	=  connectorList[i]->description;
 			jsonConnectorItem["DIR"]			=  connectorList[i]->dir;
+			jsonConnectorItem["UUID"]			=  connectorList[i]->UUID;
 			jsonConnectorList.append(jsonConnectorItem);
 		}
 		return jsonConnectorList;
