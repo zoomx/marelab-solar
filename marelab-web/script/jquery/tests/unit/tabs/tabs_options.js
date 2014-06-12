@@ -73,29 +73,27 @@ test( "{ active: Number }", function() {
 	state( element, 0, 1, 0 );
 });
 
-if ( $.uiBackCompat === false ) {
-	test( "{ active: -Number }", function() {
-		expect( 8 );
+test( "{ active: -Number }", function() {
+	expect( 8 );
 
-		var element = $( "#tabs1" ).tabs({
-			active: -1
-		});
-		equal( element.tabs( "option", "active" ), 2 );
-		state( element, 0, 0, 1 );
-
-		element.tabs( "option", "active", -2 );
-		equal( element.tabs( "option", "active" ), 1 );
-		state( element, 0, 1, 0 );
-
-		element.tabs( "option", "active", -10 );
-		equal( element.tabs( "option", "active" ), 1 );
-		state( element, 0, 1, 0 );
-
-		element.tabs( "option", "active", -3 );
-		equal( element.tabs( "option", "active" ), 0 );
-		state( element, 1, 0, 0 );
+	var element = $( "#tabs1" ).tabs({
+		active: -1
 	});
-}
+	equal( element.tabs( "option", "active" ), 2 );
+	state( element, 0, 0, 1 );
+
+	element.tabs( "option", "active", -2 );
+	equal( element.tabs( "option", "active" ), 1 );
+	state( element, 0, 1, 0 );
+
+	element.tabs( "option", "active", -10 );
+	equal( element.tabs( "option", "active" ), 1 );
+	state( element, 0, 1, 0 );
+
+	element.tabs( "option", "active", -3 );
+	equal( element.tabs( "option", "active" ), 0 );
+	state( element, 1, 0, 0 );
+});
 
 test( "active - mismatched tab/panel order", function() {
 	expect( 3 );
@@ -237,10 +235,18 @@ test( "{ heightStyle: 'content' }", function() {
 });
 
 test( "{ heightStyle: 'fill' }", function() {
-	expect( 2 );
+	expect( 4 );
 	$( "#tabs8Wrapper" ).height( 500 );
 	var element = $( "#tabs8" ).tabs({ heightStyle: "fill" });
 	equalHeight( element, 485 );
+	element.tabs( "destroy" );
+
+	element = $( "#tabs8" ).css({
+		"border": "1px solid black",
+		"padding": "1px 0"
+	});
+	element.tabs({ heightStyle: "fill" });
+	equalHeight( element, 481 );
 });
 
 test( "{ heightStyle: 'fill' } with sibling", function() {
@@ -292,7 +298,7 @@ test( "hide and show: false", function() {
 			show: false,
 			hide: false
 		}),
-		widget = element.data( "tabs" ),
+		widget = element.data( "ui-tabs" ),
 		panels = element.find( ".ui-tabs-panel" );
 	widget._show = function() {
 		ok( false, "_show() called" );
@@ -313,7 +319,7 @@ asyncTest( "hide and show - animation", function() {
 			show: "drop",
 			hide: 2000
 		}),
-		widget = element.data( "tabs" ),
+		widget = element.data( "ui-tabs" ),
 		panels = element.find( ".ui-tabs-panel" );
 	widget._show = function( element, options, callback ) {
 		strictEqual( element[ 0 ], panels[ 1 ], "correct element in _show()" );

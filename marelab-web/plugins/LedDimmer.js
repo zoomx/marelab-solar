@@ -27,6 +27,23 @@
  *
  */
 
+/*
+ * Short Description 
+ * Every plugin for a virtual Equipment ( implemented by plugins for marelab kernel & gui) 
+ * can have (n) locial connectors. These Connectors can be assigned to physical hardware 
+ * with the GUI.
+ * 
+ *  There are 4 Types of locical Connectors
+ *  Plugin
+ *  I/O output 0/1
+ *  I/O input  0/1
+ *  D/A output 0-255 8Bit 0-1024 16Bit
+ *  A/D input   
+ *  
+ *  These locgical plugin Connectors can be bounded to the physical Hardware Ports define
+ *  by Adapter plugins
+ */
+
 // Delay function needed because Script files getting loaded as defined, somtimes later defined 
 // functions loaded first
 function pausecomp(millis) {
@@ -86,6 +103,7 @@ var keyLeds = [];
 var LDI2CHANNEL = [];				// Channel of the Led String
 var LDNUMBER = [];					
 var CHARTCOLOR = [];				// Array from nucleus config with color for the Graph Line
+var UUID =[];
 
 
 var render_width;
@@ -165,6 +183,14 @@ function GetDataToGraph() {
 		LDI2CHANNEL[x] = LEDliste.LedListe[x].cell[2];
 		LDNUMBER[x] = LEDliste.LedListe[x].cell[0];
 		CHARTCOLOR[x] = LEDliste.LedListe[x].cell[4];
+		
+		// generate a uuid if non is there
+		if(LEDliste.LedListe[x].cell[5]==""){
+			UUID[x] = randomUUID();
+			//alert(UUID[x]);
+		}
+		else
+			UUID[x] = LEDliste.LedListe[x].cell[5];
 	}
 	
 	
@@ -227,6 +253,9 @@ function Graph(id, arrayLeds, keyLeds) {
 
 	return line;
 }
+
+
+
 
 /*
 // Gets all LEDs & LED Texte from marelab
@@ -517,11 +546,144 @@ function led_SAVECURVE() {
 		sendCommand.LDI2CCHANNEL = LDI2CHANNEL[x];
 		sendCommand.LDLEDARRAY = ledarr;
 		sendCommand.CHARTCOLOR = CHARTCOLOR[x];
+		sendCommand.UUID = UUID[x];
 		para = '"PLUGIN":"LedDimmer","LDID":"' + sendCommand.LDID + '","LDNAME":"'
 				+ sendCommand.LDNAME + '","LDI2CCHANNEL":"'
-				+ sendCommand.LDI2CCHANNEL + '","LDLEDARRAY":' + ledarr+',"CHARTCOLOR":"' + sendCommand.CHARTCOLOR+'"';
+				+ sendCommand.LDI2CCHANNEL + '","LDLEDARRAY":' + ledarr+',"CHARTCOLOR":"' + sendCommand.CHARTCOLOR+'","UUID":"' + sendCommand.UUID+'"';
 		//alert(para);
 		getMarelabData('COMMAND=SAVE_CONFIG&PARAMETER=' + para);
+	}
+}
+
+
+// Gets the list of IO Ports that could be conneted to the selected Logical Function
+// Logical Modul -> (n) logical Ports -> Mapped to Hardware Device Ports & I/O Pins
+/*
+{"COMMAND":"GET_CONNECTOR_FOR_PLUGIN","CONNECTOR":{"CHIPS_ON_BUS":[{"CHIPTYP":"PCF8574","CONNECTORS":[{"DESCRIPTION":"PCF8574 IO-0","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-1","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-2","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-3","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-4","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-5","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-6","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-7","DIR":2,"HWTYPE":0}]},{"CHIPTYP":"MAX520","CONNECTORS":[{"DESCRIPTION":"MAX520 DA-1","DIR":1,"HWTYPE":1},{"DESCRIPTION":"MAX520 DA-2","DIR":1,"HWTYPE":1},{"DESCRIPTION":"MAX520 DA-3","DIR":1,"HWTYPE":1},{"DESCRIPTION":"MAX520 DA-4","DIR":1,"HWTYPE":1}]}],"PLUGIN_NAME":"I2C Adapter","PLUGIN_VERSION":"0.1","TYPE_OF_PLUGIN":"ADAPTER"}}
+{
+"COMMAND":"GET_CONNECTOR_FOR_PLUGIN",
+"CONNECTOR":{
+"CHIPS_ON_BUS":
+	[{
+	"CHIPTYP":"PCF8574",
+	"CONNECTORS":
+		[{
+			"DESCRIPTION":"PCF8574 IO-0",
+			"DIR":2,
+			"HWTYPE":0
+		  },
+		  {
+			"DESCRIPTION":"PCF8574 IO-1",
+			"DIR":2,
+			"HWTYPE":0
+		  },
+		  {
+			"DESCRIPTION":"PCF8574 IO-2",
+			"DIR":2,
+			"HWTYPE":0
+		  },
+		  {
+			"DESCRIPTION":"PCF8574 IO-3",
+			"DIR":2,
+			"HWTYPE":0
+		  },
+		  {
+			"DESCRIPTION":"PCF8574 IO-4",
+			"DIR":2,
+			"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-5","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-6","DIR":2,"HWTYPE":0},{"DESCRIPTION":"PCF8574 IO-7","DIR":2,"HWTYPE":0}]},{"CHIPTYP":"MAX520","CONNECTORS":[{"DESCRIPTION":"MAX520 DA-1","DIR":1,"HWTYPE":1},{"DESCRIPTION":"MAX520 DA-2","DIR":1,"HWTYPE":1},{"DESCRIPTION":"MAX520 DA-3","DIR":1,"HWTYPE":1},{"DESCRIPTION":"MAX520 DA-4","DIR":1,"HWTYPE":1}]}],"PLUGIN_NAME":"I2C Adapter","PLUGIN_VERSION":"0.1","TYPE_OF_PLUGIN":"ADAPTER"}}
+*/
+
+function CreateTableView(objArray, theme, enableHeader) {
+    // set optional theme parameter
+    if (theme === undefined) {
+        theme = 'mediumTable'; //default theme
+    }
+ 
+    if (enableHeader === undefined) {
+        enableHeader = true; //default enable headers
+    }
+ 
+    // If the returned data is an object do nothing, else try to parse
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+ 
+    var str = '<table class="' + theme + '">';
+     
+    // table head
+    if (enableHeader) {
+        str += '<thead><tr>';
+        for (var index in array[0]) {
+            str += '<th scope="col">' + index + '</th>';
+        }
+        str += '</tr></thead>';
+    }
+     
+    // table body
+    str += '<tbody>';
+    for (var i = 0; i < array.length; i++) {
+        str += (i % 2 == 0) ? '<tr class="alt">' : '<tr>';
+        for (var index in array[i]) {
+            str += '<td>' + array[i][index] + '</td>';
+        }
+        str += '</tr>';
+    }
+    str += '</tbody>'
+    str += '</table>';
+    return str;
+}
+
+
+function GET_IO_CONNECTOR(insert_at){
+	para = '"PLUGINNAME":"I2C Adapter"';
+	var PHYSICAL_CONNECTOR = getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para);
+	var Connectors =  PHYSICAL_CONNECTOR.CONNECTOR;
+	var BUS =  PHYSICAL_CONNECTOR.CONNECTOR.CHIPS_ON_BUS;
+	var htmliotable="";
+	for (var CHIPS in BUS) {
+		//alert (JSON.stringify(BUS[CHIPS].CHIPTYP));
+		var IO_PIN = BUS[CHIPS].CONNECTORS;
+		htmliotable = htmliotable + CreateTableView(IO_PIN);
+	}
+	
+	//var htmlDIALOG = "<div class='ANON_DIALOG' title='IO Connectors to select'>"+ htmliotable +"</div>";
+	//var htmlDIALOG = "<div class='ANON_DIALOG'></div>";
+	
+	$( "div.ANON_CONTENT" ).replaceWith( htmliotable);
+	$( "div.ANON_DIALOG" ).dialog();	
+}
+
+/*
+function ConnectorDropDownMenu()
+{
+	
+	para = '"PLUGINNAME":"I2C Adapter"';
+	var PHYSICAL_CONNECTOR = getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para);
+	var Connectors =  PHYSICAL_CONNECTOR.CONNECTOR;
+	var BUS =  PHYSICAL_CONNECTOR.CONNECTOR.CHIPS_ON_BUS;
+	var dropdown="";
+	dropdown = "<select name='mydropdown'>";
+	var valuefield;
+	for (var CHIPS in BUS) {
+		//alert (JSON.stringify(BUS[CHIPS].CHIPTYP));
+		var IO_PIN = BUS[CHIPS].CONNECTORS;
+		for (var index in IO_PIN){
+			valuefield = JSON.stringify(IO_PIN[index].DESCRIPTION);
+			dropdown = dropdown + "<option value='" +valuefield+ "'>"+valuefield+"</option>";  
+		}
+	}
+	dropdown = dropdown + "</select>";
+	return dropdown;
+}
+*/
+
+
+function SaveConnectors() {
+	//Get all Logical UUID that are the ID of the Select Drop Downs
+	for (var index =0; index < LogicalConList.GetList().length;index++){
+		if (LogicalConList.GetList()[index].getPLUGIN_NAME() == "LedDimmer")
+		{
+			console.log("LedDimmer Connector ->("+LogicalConList.GetList()[index].getDESCRIPTION()+") SAVED: ("+$("select#"+LogicalConList.GetList()[index].getUUID()+".PLUGINDROPDOWNSTYLE  option:selected").val() +")" );
+			
+		}
 	}
 }
 
@@ -532,13 +694,31 @@ function CONNECTOR(){
 	var htmlContent ="<p>";
 	LogicConnectors = getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para).CONNECTOR;
 	//var myJSONText1 = JSON.stringify(getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para));
+	var physicalAdapter = GetPhysicalAdapter("LedDimmer");
+	// generate the logic connector list	
 
-	// generate the logic connector list
 	titeltxt = LogicConnectors.PLUGIN_NAME + " Version:" + LogicConnectors.PLUGIN_VERSION;
 	htmlContent = htmlContent + "<div id='titel_setup_content'>";
 	htmlContent = htmlContent + "<div id='TOOLBAR-TITEL'>"+titeltxt+"</div>";
+	htmlContent = htmlContent + "</div>";
+
+	htmlContent = htmlContent + "<div id='titel_setup_content'>";
+	htmlContent = htmlContent + "<div id='TOOLBAR-TITEL'>Light Setup Parameters</div>";
 	htmlContent = htmlContent + "<div id='TOOLBAR'>";
-	htmlContent = htmlContent + "	<input type='image' onclick='led_SAVECURVE();' src='img/savef.png' width='32' height='32' alt='save' />";
+	htmlContent = htmlContent + "	<input type='image' onclick='LIGHT_SAVEPARAMETER();' src='img/savef.png' width='32' height='32' alt='save' />";
+	htmlContent = htmlContent + "</div>";
+	htmlContent = htmlContent + "<table border='0' width='100%' cellpadding='0' cellspacing='2'>";
+	htmlContent = htmlContent + "<tr>";
+	htmlContent = htmlContent + "<td><label for='spinner'>Brightness max:</label></td>";
+	htmlContent = htmlContent + "<td><input id='LIGHT_MAX_BRIGHNESS' name='valuespinner'></td>";
+	htmlContent = htmlContent + "</tr>";
+	htmlContent = htmlContent + "</table>";
+	htmlContent = htmlContent + "</div>";
+	
+	htmlContent = htmlContent + "<div id='titel_setup_content'>";
+	htmlContent = htmlContent + "<div id='TOOLBAR-TITEL'>Connetor for Light Dimmer Modul</div>";
+	htmlContent = htmlContent + "<div id='TOOLBAR'>";
+	htmlContent = htmlContent + "	<input type='image' onclick='SaveConnectors();' src='img/savef.png' width='32' height='32' alt='save' />";
 	htmlContent = htmlContent + "</div>";
 	htmlContent = htmlContent + "</div>";
 	
@@ -550,65 +730,42 @@ function CONNECTOR(){
 	htmlContent = htmlContent + "<td>Type</td>";
 	htmlContent = htmlContent + "<td>Dir</td>";
 	htmlContent = htmlContent + "<td>Adapter Port</td>";
-	htmlContent = htmlContent + "<td>Type</td>";
+	//htmlContent = htmlContent + "<td>Type</td>";
 	htmlContent = htmlContent + "</tr>";
-	var Connectors =  LogicConnectors.CONNECTORS;
+	var Connectors =  LogicalConList.GetList();
 	for (var Connector in Connectors) {
+		if (Connectors[Connector].getPLUGIN_NAME() == "LedDimmer"){
 		htmlContent = htmlContent + "<tr>";
-		htmlContent = htmlContent + "<td>"+Connectors[Connector].DESCRIPTION+"</td>";
+		htmlContent = htmlContent + "<td>"+Connectors[Connector].getDESCRIPTION()+"</td>";
 		// Hardware Type IO,DA,AD
-		if (Connectors[Connector].HWTYPE=="0")									// IO img
+		if (Connectors[Connector].getHWTYPE() == 0)									// IO img
 			htmlContent = htmlContent + "<td><img src='img/IO.png' alt='sd' width='48' height='16'/></td>";
-		if (Connectors[Connector].HWTYPE=="1")									// DA img
+		if (Connectors[Connector].getHWTYPE() == 1)									// DA img
 			htmlContent = htmlContent + "<td><img src='img/DA.png' alt='sd' width='48' height='16'/></td>";
-		if (Connectors[Connector].HWTYPE == "2" ) 								// AD img
+		if (Connectors[Connector].getHWTYPE() == 2) 								// AD img
 			htmlContent = htmlContent + "<td><img src='img/AD.png' alt='sd' width='16' height='16'/></td>";
 		// Dir IN,OUT,BI
-		if (Connectors[Connector].DIR=="1")										  // Output img
+		if (Connectors[Connector].getDIR() == 1)										  // Output img
 			htmlContent = htmlContent + "<td><img src='img/dout.png' alt='sd' width='48' height='16'/></td>";
-		if (Connectors[Connector].DIR=="0")										  // Input img
+		if (Connectors[Connector].getDIR() == 0)										  // Input img
 			htmlContent = htmlContent + "<td><img src='img/din.png' alt='sd' width='48' height='16'/></td>";
-		if (Connectors[Connector].DIR != "0" && Connectors[Connector].DIR != "1") // Error img
+		if ((Connectors[Connector].getDIR() != 0) && (Connectors[Connector].getDIR() != 1)) // Error img
 			htmlContent = htmlContent + "<td><img src='img/del.png' alt='sd' width='16' height='16'/></td>";
-		
-		htmlContent = htmlContent + "<td>"+"<input type='image' onclick='CONNECTOR();' src='img/lightbulb.png' alt='sd' width='16' height='16'/>"+"</td>";
-		htmlContent = htmlContent + "<td></td>";
+		htmlContent = htmlContent + "<td>"+"<input type='image' onclick='GET_IO_CONNECTOR();' src='img/lightbulb.png' alt='sd' width='16' height='16'/>" + PhysicalConList.DropDownAllConnectors(physicalAdapter,Connectors[Connector].getUUID(),Connectors[Connector].getDIR(),Connectors[Connector].getHWTYPE()) +"</td>"; 	
+		//htmlContent = htmlContent + "<td></td>";
 		htmlContent = htmlContent + "</tr>";
+		}
 	}
 	htmlContent = htmlContent + "</table>";
 	htmlContent = htmlContent + "</div>";
 	htmlContent = htmlContent + "</div>";
 	
-
-
-
-	
-	
-	//var myJSONText1 = JSON.stringify(LogicConnectors);
-	//alert (myJSONText1);
-	
-	para = '"PLUGINNAME":"I2C Adapter"';
-	var myJSONText2 = JSON.stringify(getMarelabData('COMMAND=GET_CONNECTOR_FOR_PLUGIN&PARAMETER=' + para));
-	alert (myJSONText2);
 	ConnectorDialog(titeltxt,htmlContent); 
+	
+	var spinner1 = $( "#LIGHT_MAX_BRIGHNESS" ).spinner({ max: 100 , min:0});
+	$('#LIGHT_MAX_BRIGHNESS').val(foodpower);
 }
 
-// MOVES the LED Light Down
-function led_MOVE_DOWN(){
-	para = '"LEDIMMER_DIR":"DOWN"';
-	getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
-}
-// STOPS THE LED LIGHT MOVE
-function led_MOVE_STOP(){
-	para = '"LEDIMMER_DIR":"STOP"';
-	getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
-	
-}
-// MOVES THE LED LIGHT UP
-function led_MOVE_UP(){
-	para = '"LEDIMMER_DIR":"UP"';
-	getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
-}
 
 function GenerateLedDropDown(){
 	var html;
@@ -979,4 +1136,37 @@ jQuery.fn.farbtastic = function (callback) {
 	  if (callback) {
 	    fb.linkTo(callback);
 	  }
+	}
+	// MANUEL COMMANDS FROM THE TITLE BAR ICONS
+	
+	// MOVES the LED Light Down
+	function led_MOVE_DOWN(){
+		para = '"LEDIMMER_CONTROL":"DOWN"';
+		getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+	}
+	// STOPS THE LED LIGHT MOVE
+	function led_MOVE_STOP(){
+		para = '"LEDIMMER_CONTROL":"STOP"';
+		getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+		
+	}
+	// MOVES THE LED LIGHT UP
+	function led_MOVE_UP(){
+		para = '"LEDIMMER_CONTROL":"UP"';
+		getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+	}
+
+	
+	// Sets Light Control to automatic mode that is defined by the Graph
+	function led_autolight()
+	{
+		para = '"LEDIMMER_CONTROL":"AUTO_LIGHT"';
+		getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);
+	}
+	
+	// Sets Light to Full Bright on ALL CHANNELS
+	function led_fulllight()
+	{
+		para = '"LEDIMMER_CONTROL":"FULL_LIGHT"';
+		getMarelabData('COMMAND=LEDLIGHT&PARAMETER=' + para);		
 	}

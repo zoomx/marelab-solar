@@ -388,13 +388,38 @@ th#MDB-mCU-content2 {
 	cellpadding: 0px;
 	padding: 5px;
 }
+
+td#MDB-mCU-content1 {
+	background-color: #4D9394; 
+	text-align: left; 
+	cellspacing: 0px;
+	cellpadding: 0px;
+	padding: 5px;
+}
+td#MDB-mCU-content2 {
+	background-color: #436D6E; 
+	cellspacing: 0px;
+	cellpadding: 0px;
+	padding: 5px;
+}
 p#deamonVersion{
 	text-align: right;
 	cellspacing: 0px;
 	cellpadding: 0px;
 	padding: 0px; 
 }
-
+#INPUTFIELD{
+    border: 1px solid #4D9394; 
+    padding: 2px;
+    background: #436D6E;
+    margin: 0 0 2px 0;
+    width: 400px;
+    color: #f0f0f0;
+}
+#INPUTFIELD:focus{
+	outline: 0;
+	border: solid 1px #bbb;
+}
 .ui-tabs-vertical { width: 500; background:#121D29;}
 .ui-tabs-vertical .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; background:#121D29;border-width: 0px;}
 .ui-tabs-vertical .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
@@ -402,5 +427,3 @@ p#deamonVersion{
 .ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; border-right-width: 1px; }
 .ui-tabs-vertical .ui-tabs-panel { padding: 2px; padding-left: 10px;  background:#121D29;}
 				
-
-

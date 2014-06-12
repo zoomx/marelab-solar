@@ -66,6 +66,12 @@ function NUCLEUS_Test()
 	alert(jsonRET.PARAMETER);
 
 }
+function NUCLEUS_Stop()
+{
+	jsonRET = getMarelabData('COMMAND=EXIT');
+	alert(jsonRET.PARAMETER);
+
+}
 function TestMarelabCgi(what2Get) {
 	var dataret;
 	$.ajax({
@@ -195,6 +201,7 @@ function getMarelabData(what2Get) {
 							<div id="marelabtest">
 							<button onclick="CGI_Test();">test marelab cgi</button><br></br>
 							<button onclick="NUCLEUS_Test();">test marelab nucleus</button>
+							<button onclick="NUCLEUS_Stop();">stop nucleus</button>
 								<!-- LIST OF PLUGINS -->
 								<!-- ************************* -->
 							</div>

@@ -28,9 +28,9 @@ QUnit.reset = function() {
 QUnit.config.requireExpects = true;
 
 QUnit.config.urlConfig.push({
-  id: "min",
-  label: "Minified source",
-  tooltip: "Load minified source files instead of the regular unminified ones."
+	id: "min",
+	label: "Minified source",
+	tooltip: "Load minified source files instead of the regular unminified ones."
 });
 
 TestHelpers.loadResources = QUnit.urlParams.min ?
@@ -77,16 +77,22 @@ TestHelpers.testJshint = function( module ) {
 				dataType: "text"
 			})
 		).done(function( hintArgs, srcArgs ) {
-			var passed = JSHINT( srcArgs[ 0 ], hintArgs[ 0 ] ),
-				errors = $.map( JSHINT.errors, function( error ) {
-					// JSHINT may report null if there are too many errors
-					if ( !error ) {
-						return;
-					}
+			var globals, passed, errors,
+				jshintrc = hintArgs[ 0 ],
+				source = srcArgs[ 0 ];
 
-					return "[L" + error.line + ":C" + error.character + "] " +
-						error.reason + "\n" + error.evidence + "\n";
-				}).join( "\n" );
+			globals = jshintrc.globals || {};
+			delete jshintrc.globals;
+			passed = JSHINT( source, jshintrc, globals );
+			errors = $.map( JSHINT.errors, function( error ) {
+				// JSHINT may report null if there are too many errors
+				if ( !error ) {
+					return;
+				}
+
+				return "[L" + error.line + ":C" + error.character + "] " +
+					error.reason + "\n" + error.evidence + "\n";
+			}).join( "\n" );
 			ok( passed, errors );
 			start();
 		})
@@ -170,6 +176,14 @@ TestHelpers.commonWidgetTests = function( widget, settings ) {
 };
 
 /*
+ * Taken from https://github.com/jquery/qunit/tree/master/addons/close-enough
+ */
+window.closeEnough = function( actual, expected, maxDifference, message ) {
+	var passes = (actual === expected) || Math.abs(actual - expected) <= maxDifference;
+	QUnit.push(passes, actual, expected, message);
+};
+
+/*
  * Experimental assertion for comparing DOM objects.
  *
  * Serializes an element and some properties and attributes and it's children if any, otherwise the text.
@@ -205,6 +219,33 @@ window.domEqual = function( selector, modifier, message ) {
 			"title"
 		];
 
+	function getElementStyles( elem ) {
+		var key, len,
+			style = elem.ownerDocument.defaultView ?
+				elem.ownerDocument.defaultView.getComputedStyle( elem, null ) :
+				elem.currentStyle,
+			styles = {};
+
+		if ( style && style.length && style[ 0 ] && style[ style[ 0 ] ] ) {
+			len = style.length;
+			while ( len-- ) {
+				key = style[ len ];
+				if ( typeof style[ key ] === "string" ) {
+					styles[ $.camelCase( key ) ] = style[ key ];
+				}
+			}
+		// support: Opera, IE <9
+		} else {
+			for ( key in style ) {
+				if ( typeof style[ key ] === "string" ) {
+					styles[ key ] = style[ key ];
+				}
+			}
+		}
+
+		return styles;
+	}
+
 	function extract( elem ) {
 		if ( !elem || !elem.length ) {
 			QUnit.push( false, actual, expected,
@@ -222,6 +263,7 @@ window.domEqual = function( selector, modifier, message ) {
 			var value = elem.attr( attr );
 			result[ attr ] = value !== undefined ? value : "";
 		});
+		result.style = getElementStyles( elem[ 0 ] );
 		result.events = $._data( elem[ 0 ], "events" );
 		result.data = $.extend( {}, elem.data() );
 		delete result.data[ $.expando ];
@@ -235,11 +277,22 @@ window.domEqual = function( selector, modifier, message ) {
 		}
 		return result;
 	}
-	expected = extract( $( selector ) );
-	modifier( $( selector ) );
 
-	actual = extract( $( selector ) );
-	QUnit.push( QUnit.equiv(actual, expected), actual, expected, message );
+	function done() {
+		actual = extract( $( selector ) );
+		QUnit.push( QUnit.equiv(actual, expected), actual, expected, message );
+	}
+
+	// Get current state prior to modifier
+	expected = extract( $( selector ) );
+
+	// Run modifier (async or sync), then compare state via done()
+	if ( modifier.length ) {
+		modifier( done );
+	} else {
+		modifier();
+		done();
+	}
 };
 
 }( jQuery ));
