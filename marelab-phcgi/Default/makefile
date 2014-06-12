@@ -11,9 +11,6 @@ RM := rm
 -include src/marelab/subdir.mk
 -include src/cgicc/subdir.mk
 -include src/subdir.mk
--include Debug/src/marelab/subdir.mk
--include Debug/src/cgicc/subdir.mk
--include Debug/src/subdir.mk
 -include subdir.mk
 -include objects.mk
 

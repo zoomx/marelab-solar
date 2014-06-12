@@ -67,20 +67,27 @@ function _makedir(){
 }
 
 function _downloadMarelab(){
- #finding if linux86 or arm like pi beagle mini2440 etc.
- foundos=$(uname -m)
- if [ "$foundos" == "i686" ]; then
-    MARELAB_OS="PC"
- fi
- if [ "$foundos" == "armv6l" ]; then
-    MARELAB_OS="ARM"
- fi
- if [ "$MARELAB_OS" == "PC" ]; then
-    echo "downloading linux pc based version of marelab..."
- fi
- if [ "$MARELAB_OS" == "ARM" ]; then
-    echo "downloading linux arm based version of marelab..."
- fi
+ 	#finding if linux86 or arm like pi beagle mini2440 etc.
+ 	foundos=$(uname -m)
+ 	if [ "$foundos" == "i686" ]; then
+    	MARELAB_OS="PC"
+ 	fi
+ 	if [ "$foundos" == "armv6l" ]; then
+   	 	MARELAB_OS="ARM"
+ 	fi
+ 	if [ "$MARELAB_OS" == "PC" ]; then
+    	echo "downloading linux pc based version of marelab..."
+    	cd marelab-plug
+    	wget "https://marelab-solar.googlecode.com/git/marelab-distro/marelab-aqua-pi/marelab-plugin/libmarelab-adapter-i2c.so"
+    	wget "https://marelab-solar.googlecode.com/git/marelab-distro/marelab-aqua-pi/marelab-plugin/libmarelab-plugin-led.so"
+ 		cd ..
+ 		cd marelab-bin
+ 		wget "
+ 		wget "
+ 	fi
+ 	if [ "$MARELAB_OS" == "ARM" ]; then
+    	echo "downloading linux arm based version of marelab..."
+ 	fi
 }
 
 
@@ -135,7 +142,7 @@ function _pre_install(){
  #Check the needed packages and install them
  	_checkingPacket "boa"
 	_checkingPacket "lua5.2"
-	_checkingPacket "git"
+	_checkingPacket "wget"
 
 echo "downloading marelab from marelab.org git repository ..."
 	_downloadMarelab

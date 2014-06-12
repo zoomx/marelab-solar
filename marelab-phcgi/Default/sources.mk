@@ -26,7 +26,4 @@ SUBDIRS := \
 src \
 src/marelab \
 src/cgicc \
-Debug/src \
-Debug/src/marelab \
-Debug/src/cgicc \
 
