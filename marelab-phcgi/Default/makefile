@@ -52,18 +52,13 @@ marelab-phcgi: $(OBJS) $(USER_OBJS)
 	g++  -o "marelab-phcgi" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
-	$(MAKE) --no-print-directory post-build
 
 # Other Targets
 clean:
 	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) marelab-phcgi
 	-@echo ' '
 
-post-build:
-	-cp /mnt/marelab/marelab-phcgi/Default/marelab-phcgi /mnt/marelab/marelab-cgi/Default
-	-@echo ' '
-
 .PHONY: all clean dependents
-.SECONDARY: post-build
+.SECONDARY:
 
 -include ../makefile.targets
