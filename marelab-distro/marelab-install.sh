@@ -84,14 +84,13 @@ function _downloadMarelab(){
     	echo "downloading linux pc based version of marelab..."
     	cd marelab-plug
     	
-    	wget "$MARELAB_REPO/marelab-aqua-pi/marelab-plugin/libmarelab-adapter-i2c.so"
-    	wget "$MARELAB_REPO/marelab-aqua-pi/marelab-plugin/libmarelab-plugin-led.so"
+    	wget "$MARELAB_REPO/marelab-aqua-pi/marelab-plugin/libmarelab-adapter-i2c"
+    	wget "$MARELAB_REPO/marelab-aqua-pi/marelab-plugin/libmarelab-plugin-led"
  		cd ..
  		cd marelab-cgi
- 		wget "$MARELAB_REPO/marelab-aqua-pi/marelab-bin/marelab-cgi"
- 		wget "$MARELAB_REPO/marelab-aqua-pi/marelab-bin/marelab-phcgi"
+ 		wget "$MARELAB_REPO/marelab-aqua-pi/marelab-cgi/marelab-cgi"
+ 		wget "$MARELAB_REPO/marelab-aqua-pi/marelab-cgi/marelab-phcgi"
  		chmod 770 marelab-cgi
- 		chmod 770 marelab-nucleus
  		chmod 770 marelab-phcgi
  	fi	
  	if [ "$MARELAB_OS" == "ARM" ]; then
@@ -145,7 +144,7 @@ function _pre_install(){
         _fail "ERROR: Sorry you must be root to run this script exp: ( sudo marelab-install.sh ) \n"
         exit
  fi
-
+ cd $MARELAB_BASE_DIR
  _makedir "marelab-aqua"
   cd marelab-aqua
  _makedir "marelab-web"
@@ -167,7 +166,7 @@ function _pre_install(){
 #	_checkingPacket "mpack"
 
 echo "downloading marelab from marelab.org git repository ..."
-#	_downloadMarelab
+	_downloadMarelab
 	
 #changing all to user marelab
 cd ..
@@ -177,10 +176,10 @@ chown -R marelab:marelab *
 /etc/init.d/boa stop
 echo "configure boa webserver for marelab use ..."
 echo "getting a clean installed boa.conf from marelab git ..."
+cd $MARELAB_BASE_DIR
 cd marelab-aqua/temp-install
 wget "$MARELAB_REPO/marelab-aqua-pi/marelab-conf/boa.conf"
-cd ..
-cd ..
+cd $MARELAB_BASE_DIR
 cd marelab-aqua/marelab-web
 wget "$MARELAB_REPO/marelab-aqua-pi/marelab-web/index.html"
 cd ..
@@ -226,6 +225,7 @@ function _configureI2Cbus(){
 #the deamon is configured to start with the OS automatic
 function _configureMarelabNucleus(){
 	echo "start configuration of marelab nucleus deamon ..."
+	cd $MARELAB_BASE_DIR
 	cd marelab-aqua/temp-install
 	wget "$MARELAB_REPO/marelab-aqua-pi/marelab-conf/marelab.conf"
 	cd ..
